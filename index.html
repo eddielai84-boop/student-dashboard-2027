@@ -1,0 +1,3084 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LK EDU · Standard 1 & Standard 2 五科评估与云端双向同步中心</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons (Deferred so it never blocks rendering) -->
+  <script defer src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', '"Noto Sans SC"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#1e1b4b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #f8fafc; color: #0f172a; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+    .glass-header {
+      background: rgba(255, 255, 255, 0.93);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    @page { size: A4 portrait; margin: 9mm; }
+    @media print {
+      html, body {
+        background: #ffffff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .no-print { display: none !important; }
+      body.print-mode-batch header,
+      body.print-mode-batch main,
+      body.print-mode-batch #holisticModalBackdrop,
+      body.print-mode-batch #batchWhatsAppModalBackdrop,
+      body.print-mode-batch #cloudSyncModalBackdrop,
+      body.print-mode-batch #studentDrawerBackdrop,
+      body.print-mode-batch #studentDrawer,
+      body.print-mode-batch #batchPrintToolbar {
+        display: none !important;
+      }
+      body.print-mode-batch #batchPrintModalBackdrop {
+        position: static !important;
+        display: block !important;
+        background: transparent !important;
+        padding: 0 !important;
+        overflow: visible !important;
+      }
+      body.print-mode-batch #batchPrintPagesList {
+        padding: 0 !important;
+        margin: 0 !important;
+        gap: 0 !important;
+      }
+      .a4-report-page {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 5mm 7mm !important;
+        box-shadow: none !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 10px !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      .a4-report-page:last-child {
+        page-break-after: auto !important;
+        break-after: auto !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-brand-500 selection:text-white print-mode-batch">
+
+  <!-- Top Sticky Header -->
+  <header class="sticky top-0 z-30 glass-header border-b border-slate-200/80 shadow-sm no-print">
+    <div class="max-w-[1760px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-3">
+      <!-- Left: Brand + Grade Switcher (Standard 1 vs Standard 2) -->
+      <div class="flex items-center gap-3.5">
+        <div id="subjectHeroIcon" class="w-11 h-11 rounded-2xl bg-gradient-to-br from-rose-600 to-orange-500 flex items-center justify-center text-white shadow-md font-extrabold text-base">
+          华
+        </div>
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <h1 id="mainHeaderTitle" class="text-base sm:text-xl font-extrabold tracking-tight text-slate-900">Standard 2 五科评估与双语汇报中心</h1>
+            <span id="headerSubjectBadge" class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-rose-50 text-rose-700 border border-rose-200">科目：华语 (BC)</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5 hidden sm:block">支持一年级(17人) &amp; 二年级(16人)切换 · Google Sheet 双向实时同步 · 三明治双语 WhatsApp 生成</p>
+        </div>
+
+        <!-- Grade Switcher Pill -->
+        <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80 ml-1 sm:ml-3">
+          <button type="button" id="gradeBtn-STD1" onclick="selectGrade('STD1')" class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition cursor-pointer">
+            🏫 一年级 (17人)
+          </button>
+          <button type="button" id="gradeBtn-STD2" onclick="selectGrade('STD2')" class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition cursor-pointer">
+            🏫 二年级 (16人)
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Controls: Cloud Sync + Batch WhatsApp + Batch Print -->
+      <div class="flex items-center gap-2">
+        <!-- Cloud Sync Status Pill -->
+        <button type="button" onclick="openCloudSyncModal()" id="cloudStatusBtn" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-sky-50 text-sky-800 border border-sky-200 hover:bg-sky-100 transition cursor-pointer">
+          <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-sky-500"></span>
+          <span id="cloudStatusText">☁️ Google Sheet 双向同步</span>
+        </button>
+
+        <button type="button" onclick="openAddStudentModal()" class="hidden md:inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition cursor-pointer">
+          <span>+ 新增学生</span>
+        </button>
+
+        <button type="button" onclick="openBatchWhatsAppModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 transition shadow-sm cursor-pointer">
+          <span>📱 双语 WhatsApp (<span id="headerWaCount">16</span>人)</span>
+        </button>
+
+        <button type="button" onclick="openBatchPrintModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold text-white bg-gradient-to-r from-indigo-600 via-brand-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 transition shadow-sm cursor-pointer">
+          <span>🖨️ 打印 A4 报告 (<span id="headerBatchCount">16</span>人)</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace Container -->
+  <main class="flex-1 max-w-[1760px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 no-print">
+
+    <!-- Top Subject & Summary Selection Bar -->
+    <section class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-sm space-y-4">
+      <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+        <div>
+          <span class="text-[11px] font-extrabold uppercase tracking-wider text-brand-600 block mb-2">
+            STEP 1 · 选择「五科总览」或切换任教科目 (Select All-Subjects Summary or Individual Subject)
+          </span>
+          <div class="flex flex-wrap items-center gap-2.5" id="subjectTabsContainer"></div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-4">
+          <!-- Teacher Setter -->
+          <div id="teacherSetterBox" class="flex items-center gap-2 bg-slate-100/90 px-3 py-1.5 rounded-xl border border-slate-200/80">
+            <span class="text-xs font-bold text-slate-500">当前科任老师:</span>
+            <input id="globalTeacherInput" type="text" value="Teacher Tan" onchange="applyTeacherToCurrentSubject(this.value)"
+              class="w-28 bg-white px-2 py-1 rounded-lg text-xs font-bold text-slate-800 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500" />
+          </div>
+
+          <!-- Month Selector -->
+          <div>
+            <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">STEP 2 · 评估月份 (Month)</span>
+            <div class="inline-flex bg-slate-100 p-1 rounded-xl border border-slate-200/70" id="monthTabs"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Row of Control Bar -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+        <div class="flex flex-wrap items-center gap-2.5">
+          <select id="statusFilter" onchange="renderDashboard()" class="px-3 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-50 border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer">
+            <option value="ALL">📊 全部学生 (All Students)</option>
+            <option value="Excellent">🌟 Excellent (优异 · 🟢)</option>
+            <option value="Good">👍 Good (良好 · 🟢)</option>
+            <option value="Improving">📈 Improving (进步中 · 🟢)</option>
+            <option value="Fair">👌 Fair (尚可 · 🟡 三明治关怀)</option>
+            <option value="Poor">⚠️ Poor (需加强 · 🔴 三明治补强)</option>
+          </select>
+
+          <div class="relative w-56 sm:w-64">
+            <input
+              id="searchInput"
+              type="text"
+              oninput="renderDashboard()"
+              placeholder="🔍 搜索学生中英文姓名或班级(如2G)..."
+              class="w-full px-3.5 py-2 rounded-xl text-xs sm:text-sm bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 transition"
+            />
+          </div>
+
+          <div class="flex items-center gap-1.5 bg-indigo-50/80 border border-indigo-200/80 px-3 py-1.5 rounded-xl">
+            <span class="text-xs font-bold text-indigo-900">✨ 单人五科与双语快查:</span>
+            <select id="quickStudentJump" onchange="if(this.value){ openHolisticModal(this.value); this.value=''; }" class="bg-transparent text-xs font-bold text-indigo-700 focus:outline-none cursor-pointer"></select>
+          </div>
+        </div>
+
+        <!-- Right Quick Sync & Smart Tools -->
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" onclick="pullFromGoogleSheet()" class="px-3 py-2 rounded-xl text-xs font-bold text-sky-800 bg-sky-50 hover:bg-sky-100 border border-sky-200 transition cursor-pointer" title="从 Google Sheet 拉取最新云端数据">
+            ⬇️ 从 Sheet 拉取
+          </button>
+          <button type="button" onclick="pushToGoogleSheet()" class="px-3 py-2 rounded-xl text-xs font-bold text-white bg-sky-600 hover:bg-sky-700 transition cursor-pointer shadow-2xs" title="将当前修改实时推送写回 Google Sheet">
+            ⬆️ 推送至 Sheet
+          </button>
+
+          <div id="singleSubjectSmartTools" class="flex flex-wrap items-center gap-2">
+            <button type="button" onclick="autoEvaluateSmartStatus()" class="px-3 py-2 rounded-xl text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/80 transition cursor-pointer">
+              🪄 智能核算状态
+            </button>
+
+            <select id="batchStatusSelect" onchange="if(this.value !== '') { batchSetStatus(this.value); this.value=''; }" class="px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200/80 transition cursor-pointer focus:outline-none">
+              <option value="">⚡ 全班状态一键设为...</option>
+              <option value="Excellent">全班设为 🌟 Excellent</option>
+              <option value="Good">全班设为 👍 Good</option>
+              <option value="Improving">全班设为 📈 Improving</option>
+              <option value="Fair">全班设为 👌 Fair</option>
+              <option value="Poor">全班设为 ⚠️ Poor</option>
+              <option value="CLEAR">清空全班状态为 ⏳ 未评定</option>
+            </select>
+          </div>
+
+          <button type="button" onclick="exportCSV()" class="px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition cursor-pointer">
+            📥 导出 CSV
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- KPI Summary Row -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="kpiRow"></section>
+
+    <!-- VIEW A: ALL SUBJECTS SUMMARY MATRIX (五科总览视图) -->
+    <section id="allSubjectsMatrixSection" class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden hidden">
+      <div class="px-5 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white">
+        <div class="flex items-center gap-3">
+          <span class="px-2.5 py-1 rounded-lg bg-indigo-500/30 border border-indigo-400/40 text-xs font-extrabold text-indigo-200">ALL SUBJECTS SUMMARY</span>
+          <h2 id="allMatrixHeaderTitle" class="text-base font-bold">Standard 2 · 一月 五科综合评估总览表 (华 / 国 / 英 / 数 / 科)</h2>
+        </div>
+        <div class="flex items-center gap-2.5">
+          <button type="button" onclick="openBatchWhatsAppModal()" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition cursor-pointer shadow-sm">
+            📱 批量生成全班双语 WhatsApp
+          </button>
+          <button type="button" onclick="openBatchPrintModal()" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-white/15 hover:bg-white/25 text-white transition cursor-pointer">
+            🖨️ 批量打印 A4 报告单
+          </button>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[1480px]">
+          <thead>
+            <tr class="border-b border-slate-200 bg-slate-50/90 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              <th class="py-3.5 pl-4 pr-2 w-10 text-center">#</th>
+              <th class="py-3.5 px-3 w-56">学生姓名 (Name / 中文名 / 班级)</th>
+              <th class="py-3.5 px-3 w-36 text-center bg-indigo-50/50 border-x border-slate-200/60">五科总均分 / 综合评级</th>
+              <th class="py-3.5 px-3 w-48 border-r border-slate-100 text-rose-700">● 华语 (BC)</th>
+              <th class="py-3.5 px-3 w-48 border-r border-slate-100 text-emerald-700">● 国语 (BM)</th>
+              <th class="py-3.5 px-3 w-48 border-r border-slate-100 text-indigo-700">● 英语 (BI)</th>
+              <th class="py-3.5 px-3 w-48 border-r border-slate-100 text-amber-700">● 数学 (MM)</th>
+              <th class="py-3.5 px-3 w-48 border-r border-slate-100 text-purple-700">● 科学 (SC)</th>
+              <th class="py-3.5 px-3 min-w-[200px]">五科强弱项与老师评语摘要</th>
+              <th class="py-3.5 pl-2 pr-4 text-right w-44">操作</th>
+            </tr>
+          </thead>
+          <tbody id="allSubjectsTableBody" class="divide-y divide-slate-100 text-sm"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- VIEW B: SINGLE SUBJECT ASSESSMENT TABLE (单科精细评估视图) -->
+    <section id="singleSubjectSection" class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 bg-slate-50/60">
+        <div class="flex items-center gap-2.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-brand-600"></span>
+          <h2 id="tableHeaderTitle" class="text-base font-bold text-slate-900">科目：华语 (BC) · 一月 学生评估表 (Standard 2)</h2>
+          <span class="text-xs text-slate-400 font-normal hidden xl:inline">— 点击右侧「双语汇报」生成中英双语三明治 WhatsApp；点击「⬆️ 推送至 Sheet」写回云端表格</span>
+        </div>
+        <div class="flex flex-wrap items-center gap-3 text-xs text-slate-600 font-medium">
+          <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> 🌟 Exc (🟢肯定进阶)</span>
+          <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-brand-600"></span> 👍 Good (🟢稳健巩固)</span>
+          <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-cyan-600"></span> 📈 Imp (🟢表扬进步)</span>
+          <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> 👌 Fair (🟡三明治法则)</span>
+          <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-600"></span> ⚠️ Poor (🔴三明治协同补强)</span>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[1480px]">
+          <thead>
+            <tr class="border-b border-slate-200 bg-slate-50/90 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              <th class="py-3.5 pl-4 pr-2 w-10 text-center">#</th>
+              <th class="py-3.5 px-3 w-56">学生姓名 (点击看五科总览)</th>
+              <th class="py-3.5 px-3 w-72">整体状态 (5级 Status · 自由点选)</th>
+              <th class="py-3.5 px-2 text-center w-60 bg-indigo-50/40 border-x border-slate-200/60" colspan="4">
+                Remark Test 随堂周测 (0-10分)
+                <div class="grid grid-cols-4 gap-1 mt-1 text-[10px] font-semibold text-indigo-600">
+                  <span>W1</span><span>W2</span><span>W3</span><span>W4</span>
+                </div>
+              </th>
+              <th class="py-3.5 px-2 w-24 text-center">均分/趋势</th>
+              <th class="py-3.5 px-2 w-48">诊断评语 1 (Comment 1)</th>
+              <th class="py-3.5 px-2 w-48">诊断评语 2 (Comment 2)</th>
+              <th class="py-3.5 px-2 w-48">诊断评语 3 (Comment 3)</th>
+              <th class="py-3.5 px-2 min-w-[180px]">其他反馈 (Others feedback)</th>
+              <th class="py-3.5 px-2 w-32">负责老师 (Teacher)</th>
+              <th class="py-3.5 pl-2 pr-4 text-right w-40">操作</th>
+            </tr>
+          </thead>
+          <tbody id="studentTableBody" class="divide-y divide-slate-100 text-sm"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Bottom Subject-Specific Preset Comment Bank Reference -->
+    <section id="presetBankSection" class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+        <h3 id="presetBankTitle" class="text-sm font-bold text-slate-800">🏷️ 专属预设评语指标库（已内置地道英文翻译对照）</h3>
+        <button type="button" onclick="addCustomCommentPreset()" class="text-xs font-semibold text-brand-600 hover:text-brand-700 inline-flex items-center gap-1 cursor-pointer">
+          <span>+ 为当前科目新增自定义评语</span>
+        </button>
+      </div>
+      <div id="presetBadgesContainer" class="flex flex-wrap gap-2"></div>
+    </section>
+
+  </main>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL CLOUD: Google Sheet 双向实时同步设置与操作中心 -->
+  <!-- ===================================================================== -->
+  <div id="cloudSyncModalBackdrop" onclick="closeCloudSyncModal()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4 no-print">
+    <div onclick="event.stopPropagation()" class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 space-y-5">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center font-extrabold text-lg">☁️</div>
+          <div>
+            <h3 class="text-base font-extrabold text-slate-900">Google Sheet 双向实时同步中心 (Two-Way Live Sync)</h3>
+            <p class="text-xs text-slate-500">支持分别绑定一年级 (Standard 1) 与二年级 (Standard 2) 的 Web App URL</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeCloudSyncModal()" class="text-slate-400 hover:text-slate-600 cursor-pointer font-bold">✕</button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-extrabold text-slate-700 mb-1">🏫 一年级 (Standard 1) Google Apps Script Web App URL</label>
+          <input id="gasUrlSTD1" type="url" placeholder="https://script.google.com/macros/s/AKfycby6OrvYImFXiLQ7XNG4m2NEwYsBm5KFzSpz-piFa9_w0M7pGWXbRjM-Pg7eLz_FUdIkvQ/exec" onchange="saveCloudConfig()"
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-slate-800 focus:ring-2 focus:ring-sky-500 focus:outline-none" />
+        </div>
+
+        <div>
+          <label class="block font-extrabold text-slate-700 mb-1">🏫 二年级 (Standard 2) Google Apps Script Web App URL</label>
+          <input id="gasUrlSTD2" type="url" placeholder="https://script.google.com/macros/s/AKfycby6OrvYImFXiLQ7XNG4m2NEwYsBm5KFzSpz-piFa9_w0M7pGWXbRjM-Pg7eLz_FUdIkvQ/exec" onchange="saveCloudConfig()"
+            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-slate-800 focus:ring-2 focus:ring-sky-500 focus:outline-none" />
+        </div>
+
+        <label class="flex items-center justify-between p-3.5 rounded-xl bg-sky-50/70 border border-sky-200/80 cursor-pointer">
+          <div>
+            <span class="font-extrabold text-sky-950 block">⚡ 开启修改后自动后台推送 (Auto-Push on Edit)</span>
+            <span class="text-[11px] text-sky-700">开启后，老师在表格内打分或切换状态后将延迟 2 秒自动静默写回 Google Sheet</span>
+          </div>
+          <input id="autoSyncToggle" type="checkbox" onchange="saveCloudConfig()" class="w-4 h-4 rounded text-sky-600" />
+        </label>
+
+        <div id="lastSyncLogBox" class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 flex items-center justify-between">
+          <span>最近一次云端同步状态：<strong id="lastSyncTimeText" class="text-slate-800">尚未执行云端同步（当前为本地实时保存）</strong></span>
+          <button type="button" onclick="resetToDefaultData()" class="text-rose-600 font-bold hover:underline cursor-pointer">恢复初始名单</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+        <button type="button" onclick="pullFromGoogleSheet()" class="py-2.5 px-4 rounded-xl text-xs font-extrabold bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 transition cursor-pointer flex items-center justify-center gap-2">
+          <span>⬇️ 从 Google Sheet 拉取最新数据 (GET)</span>
+        </button>
+        <button type="button" onclick="pushToGoogleSheet(true)" class="py-2.5 px-4 rounded-xl text-xs font-extrabold bg-sky-600 hover:bg-sky-700 text-white shadow-md transition cursor-pointer flex items-center justify-center gap-2">
+          <span>⬆️ 立即推送全部 5 科至 Sheet (POST)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 0: 全班【中英双语对照 WhatsApp 家长汇报】批量生成中心 -->
+  <!-- ===================================================================== -->
+  <div id="batchWhatsAppModalBackdrop" onclick="closeBatchWhatsAppModal()" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden items-center justify-center p-3 sm:p-6 overflow-y-auto no-print">
+    <div onclick="event.stopPropagation()" class="bg-white rounded-3xl max-w-6xl w-full shadow-2xl border border-slate-200 overflow-hidden my-auto max-h-[93vh] flex flex-col">
+      <div class="px-6 py-5 bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+          <div class="w-12 h-12 rounded-2xl bg-emerald-500 text-slate-950 flex items-center justify-center font-extrabold text-lg shadow-lg">💬</div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 id="batchWaModalTitle" class="text-lg sm:text-xl font-extrabold">全班【中英双语对照】WhatsApp 家长汇报生成中心</h2>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">三明治法则 + 互动缺漏引导</span>
+            </div>
+            <p class="text-xs text-emerald-100/80 mt-0.5">自动结合🌟/🟢肯定进阶与🟡/🔴三明治法则（先夸安亲与态度 ➔ 委婉指出卡点 ➔ 科任与安亲督导协同补强计划）</p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2.5">
+          <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl border border-white/15">
+            <span class="text-xs font-bold text-emerald-200">汇报模式:</span>
+            <select id="batchWaScopeSelect" onchange="renderBatchWhatsAppCards()" class="bg-transparent text-xs font-extrabold text-white focus:outline-none cursor-pointer">
+              <option value="ALL" class="text-slate-900">📊 五科综合月度汇报 (All 5 Subjects)</option>
+              <option value="华语" class="text-slate-900">📘 仅华语科 (BC Single Subject)</option>
+              <option value="国语" class="text-slate-900">📗 仅国语科 (BM Single Subject)</option>
+              <option value="英语" class="text-slate-900">📙 仅英语科 (BI Single Subject)</option>
+              <option value="数学" class="text-slate-900">📒 仅数学科 (MM Single Subject)</option>
+              <option value="科学" class="text-slate-900">📓 仅科学科 (SC Single Subject)</option>
+            </select>
+          </div>
+
+          <button type="button" onclick="copyAllWhatsAppMessages()" class="px-4 py-2 rounded-xl text-xs font-extrabold bg-emerald-400 hover:bg-emerald-300 text-slate-950 transition cursor-pointer shadow-md">
+            📋 一键复制全班双语文案
+          </button>
+
+          <button type="button" onclick="closeBatchWhatsAppModal()" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-rose-600 text-white text-xs font-bold transition cursor-pointer">
+            ✕ 关闭
+          </button>
+        </div>
+      </div>
+
+      <div id="batchWhatsAppCardsContainer" class="flex-1 overflow-y-auto p-6 space-y-5 bg-slate-50"></div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 1: 全班五科报告单「批量打印预览中心」 (Batch A4 Print View) -->
+  <!-- ===================================================================== -->
+  <div id="batchPrintModalBackdrop" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex-col overflow-y-auto">
+    <div id="batchPrintToolbar" class="sticky top-0 z-50 bg-slate-900 text-white border-b border-slate-700 px-4 sm:px-8 py-4 shadow-xl no-print">
+      <div class="max-w-6xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center font-extrabold">🖨️</div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-base sm:text-lg font-extrabold">全班五科评估报告单 · 批量打印中心 (含中英双语中心月度寄语)</h2>
+              <span id="batchPrintSummaryBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">已选 16 人</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">底部「中心月度寄语」支持自动生成每人专属的【中英双语三明治寄语】</p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2.5">
+          <select id="printRemarkModeSelect" onchange="renderBatchPrintPages()" class="bg-slate-800 text-emerald-300 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none cursor-pointer">
+            <option value="SMART_BILINGUAL">🤖 中心寄语：按学情生成专属【中英双语三明治寄语】</option>
+            <option value="UNIFIED_CUSTOM">📌 中心寄语：使用下方统一自定义文案</option>
+          </select>
+
+          <label class="inline-flex items-center gap-1.5 text-xs font-semibold bg-slate-800 px-3 py-2 rounded-xl border border-slate-700 cursor-pointer select-none">
+            <input id="toggleSignSlip" type="checkbox" checked onchange="renderBatchPrintPages()" class="rounded text-brand-500 focus:ring-0" />
+            <span>包含中心寄语与家长签回栏</span>
+          </label>
+
+          <button type="button" onclick="toggleStudentFilterPanel()" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 border border-slate-600 transition cursor-pointer">
+            ☑️ 勾选打印名单
+          </button>
+
+          <button type="button" onclick="triggerBatchPrint()" class="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-lg transition cursor-pointer">
+            🖨️ 立即打印 / 导出 PDF
+          </button>
+
+          <button type="button" onclick="closeBatchPrintModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-rose-600 text-white transition cursor-pointer">
+            ✕ 关闭预览
+          </button>
+        </div>
+      </div>
+
+      <div id="batchFilterPanel" class="max-w-6xl mx-auto mt-3 pt-3 border-t border-slate-800 hidden space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <span class="text-xs font-bold text-slate-300">选择要包含在本次打印中的学生：</span>
+          <div class="flex gap-2">
+            <button type="button" onclick="selectAllPrintStudents(true)" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-indigo-300 cursor-pointer">全选本班</button>
+            <button type="button" onclick="selectAllPrintStudents(false)" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-400 cursor-pointer">全部取消</button>
+          </div>
+        </div>
+        <div id="batchStudentCheckboxes" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2"></div>
+        <div class="flex items-center gap-2 pt-1">
+          <span class="text-xs font-bold text-slate-300 whitespace-nowrap">统一自定义寄语：</span>
+          <input id="batchCenterNoteInput" type="text" value="感谢家长一直以来的信任与配合！请查阅孩子本月份五科随堂表现，签阅后可将回条交回中心老师。" oninput="renderBatchPrintPages()"
+            class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500" />
+        </div>
+      </div>
+    </div>
+
+    <div id="batchPrintPagesList" class="max-w-4xl w-full mx-auto py-8 px-4 space-y-8"></div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- MODAL 2: 单人「一页看齐五科」全息综合评估报告单 -->
+  <!-- ===================================================================== -->
+  <div id="holisticModalBackdrop" onclick="closeHolisticModal()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 hidden items-center justify-center p-3 sm:p-6 overflow-y-auto no-print">
+    <div id="holisticModalContent" onclick="event.stopPropagation()" class="bg-white rounded-3xl max-w-6xl w-full shadow-2xl border border-slate-200 overflow-hidden my-auto max-h-[94vh] flex flex-col">
+      <div class="px-6 py-5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div id="holisticAvatar" class="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-violet-600 flex items-center justify-center text-xl font-extrabold shadow-lg border border-white/15">赖</div>
+          <div>
+            <div class="flex items-center gap-2.5">
+              <span id="holisticMonthBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-500/30 border border-indigo-400/40 text-indigo-200">Standard 2 · 一月 五科综合成绩单</span>
+              <span id="holisticStudentNo" class="text-xs text-slate-300 font-semibold">学号 #1</span>
+            </div>
+            <h2 id="holisticStudentName" class="text-xl sm:text-2xl font-extrabold tracking-tight mt-1">Lai Jing Xuan (赖婧媗)</h2>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="navigateHolisticStudent(-1)" class="px-3 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white transition cursor-pointer">◀ 上一位</button>
+          <select id="holisticStudentSelect" onchange="openHolisticModal(this.value)" class="px-3 py-2 rounded-xl text-xs font-bold bg-white/15 text-white border border-white/20 focus:outline-none cursor-pointer"></select>
+          <button type="button" onclick="navigateHolisticStudent(1)" class="px-3 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white transition cursor-pointer">下一位 ▶</button>
+          <button type="button" onclick="printSingleStudentFromHolistic()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition cursor-pointer ml-1">🖨️ 打印该生 A4 报告单</button>
+          <button type="button" onclick="closeHolisticModal()" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-rose-600 text-white text-xs font-bold transition cursor-pointer ml-1">✕</button>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/70">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div class="lg:col-span-4 bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex flex-col justify-between">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">五科综合表现总评 (Overall Summary)</span>
+              <div class="flex items-baseline gap-3 mt-2">
+                <span id="holisticOverallAvg" class="text-4xl font-extrabold text-slate-900">6.8</span>
+                <span class="text-xs font-semibold text-slate-400">/ 10 分 (五科总均分)</span>
+                <span id="holisticOverallBadge" class="px-2.5 py-1 rounded-full text-xs font-bold bg-brand-50 text-brand-700">👍 整体良好</span>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-100 text-xs">
+              <div class="bg-emerald-50/70 p-3 rounded-xl border border-emerald-200/60">
+                <span class="text-emerald-700 font-semibold block">🌟 最具优势科目</span>
+                <strong id="holisticBestSubject" class="text-sm font-extrabold text-emerald-900 mt-0.5 block">华语 (7.5分)</strong>
+              </div>
+              <div class="bg-rose-50/70 p-3 rounded-xl border border-rose-200/60">
+                <span class="text-rose-700 font-semibold block">🎯 建议加强科目</span>
+                <strong id="holisticWeakSubject" class="text-sm font-extrabold text-rose-900 mt-0.5 block">需均衡巩固</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-8 bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">五科周测均分横向对比 (华语 / 国语 / 英语 / 数学 / 科学)</span>
+              <span class="text-xs text-slate-400">点击下方任意科目卡片可直接修改状态或进入单科编辑</span>
+            </div>
+            <div id="holisticBarsContainer" class="space-y-2.5"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-extrabold text-slate-800">📚 五科周测成绩明细与各科老师评语 (All 5 Subjects Breakdown)</h3>
+            <span class="text-xs text-slate-500">提示：您可直接在此卡片内点选切换各科状态，或点击「编辑评语」修改</span>
+          </div>
+          <div id="holisticSubjectCardsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+        </div>
+
+        <div id="holisticBilingualWaSection" class="bg-white rounded-2xl border border-emerald-200 shadow-sm overflow-hidden"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================== -->
+  <!-- DRAWER: 单科深度评估抽屉 -->
+  <!-- ===================================================================== -->
+  <div id="studentDrawerBackdrop" onclick="closeStudentDrawer()" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 hidden transition-opacity no-print"></div>
+  <aside id="studentDrawer" class="fixed top-0 right-0 h-full w-full max-w-xl bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col no-print">
+    <div class="px-6 py-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+      <div>
+        <div class="flex items-center gap-2">
+          <span id="drawerSubjectBadge" class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-rose-100 text-rose-700">科目：华语 · 一月</span>
+          <span id="drawerTeacherBadge" class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-slate-200 text-slate-700">Teacher Tan</span>
+        </div>
+        <h3 id="drawerStudentName" class="text-xl font-extrabold text-slate-900 mt-1.5">Lai Jing Xuan (赖婧媗)</h3>
+        <p id="drawerStudentNo" class="text-xs text-slate-500">Standard 2 · 学号 #1</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button type="button" onclick="switchDrawerToHolistic()" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition cursor-pointer shadow-xs">📊 看五科总览</button>
+        <button type="button" onclick="closeStudentDrawer()" class="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition cursor-pointer">✕</button>
+      </div>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-6 space-y-6">
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">1. 整体学习状态 (5级 Status · 可自由点选)</label>
+          <button type="button" onclick="setDrawerStatus('')" class="text-[11px] font-semibold text-slate-400 hover:text-rose-600 cursor-pointer">清空状态</button>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2" id="drawerStatusBtns"></div>
+      </div>
+
+      <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200/80">
+        <div class="flex items-center justify-between mb-3">
+          <label class="text-xs font-bold uppercase tracking-wider text-slate-500">2. Remark Test 随堂周测成绩 (满分 10)</label>
+          <span id="drawerAvgBadge" class="text-xs font-bold text-brand-600">月均分：6.0 / 10</span>
+        </div>
+        <div class="grid grid-cols-4 gap-3">
+          <div>
+            <span class="block text-xs text-slate-500 mb-1 text-center font-medium">Week 1</span>
+            <input id="drawerW1" type="number" min="0" max="10" step="0.5" oninput="updateFromDrawer()" class="w-full text-center font-bold text-base py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+          </div>
+          <div>
+            <span class="block text-xs text-slate-500 mb-1 text-center font-medium">Week 2</span>
+            <input id="drawerW2" type="number" min="0" max="10" step="0.5" oninput="updateFromDrawer()" class="w-full text-center font-bold text-base py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+          </div>
+          <div>
+            <span class="block text-xs text-slate-500 mb-1 text-center font-medium">Week 3</span>
+            <input id="drawerW3" type="number" min="0" max="10" step="0.5" oninput="updateFromDrawer()" class="w-full text-center font-bold text-base py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+          </div>
+          <div>
+            <span class="block text-xs text-slate-500 mb-1 text-center font-medium">Week 4</span>
+            <input id="drawerW4" type="number" min="0" max="10" step="0.5" oninput="updateFromDrawer()" class="w-full text-center font-bold text-base py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">3. 学科诊断评语库 (Comment 1 – 3)</label>
+          <span class="text-[11px] text-brand-600 font-semibold">自动映射中英双语汇报</span>
+        </div>
+        <div>
+          <span class="text-xs text-slate-500 font-medium">Comment 1（首要学科诊断指标）</span>
+          <select id="drawerC1" onchange="updateFromDrawer()" class="mt-1 w-full px-3 py-2.5 rounded-xl text-sm border border-slate-200 bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none"></select>
+        </div>
+        <div>
+          <span class="text-xs text-slate-500 font-medium">Comment 2（次要学科诊断指标）</span>
+          <select id="drawerC2" onchange="updateFromDrawer()" class="mt-1 w-full px-3 py-2.5 rounded-xl text-sm border border-slate-200 bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none"></select>
+        </div>
+        <div>
+          <span class="text-xs text-slate-500 font-medium">Comment 3（补充观察或亮点表扬）</span>
+          <select id="drawerC3" onchange="updateFromDrawer()" class="mt-1 w-full px-3 py-2.5 rounded-xl text-sm border border-slate-200 bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none"></select>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">4. 老师个性化评语 (Others feedback)</label>
+          <textarea id="drawerOthers" rows="2" oninput="updateFromDrawer()" placeholder="输入针对该学生的鼓励或具体改进建议..." class="w-full px-3.5 py-2 rounded-xl text-sm border border-slate-200 focus:ring-2 focus:ring-brand-500 focus:outline-none"></textarea>
+          <div class="mt-2">
+            <span class="text-[11px] text-slate-400 block mb-1.5">点击快捷填入常用寄语：</span>
+            <div class="flex flex-wrap gap-1.5" id="quickFeedbackChips"></div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 pt-1">
+          <label class="text-xs font-bold uppercase tracking-wider text-slate-500 w-36">5. 负责老师 (Teacher):</label>
+          <input id="drawerTeacher" type="text" oninput="updateFromDrawer()" placeholder="例如：Teacher Tan" class="flex-1 px-3 py-2 rounded-xl text-sm border border-slate-200 focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+        </div>
+      </div>
+
+      <div id="drawerBilingualWaContainer"></div>
+    </div>
+
+    <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+      <button type="button" onclick="navigateDrawerStudent(-1)" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition cursor-pointer">◀ 上一位学生</button>
+      <button type="button" onclick="closeStudentDrawer()" class="px-5 py-2 rounded-xl text-xs font-bold bg-brand-600 text-white hover:bg-brand-700 transition cursor-pointer">完成并关闭</button>
+      <button type="button" onclick="navigateDrawerStudent(1)" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition cursor-pointer">下一位学生 ▶</button>
+    </div>
+  </aside>
+
+  <!-- Modal: Add Student -->
+  <div id="addStudentModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="text-base font-bold text-slate-900">新增学生名单</h3>
+        <button type="button" onclick="closeAddStudentModal()" class="text-slate-400 hover:text-slate-600 cursor-pointer">✕</button>
+      </div>
+      <div class="space-y-4 my-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">学生英文全名 (Name) *</label>
+          <input id="newStuName" type="text" placeholder="例如：Lucas Lim" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">学生中文姓名 *</label>
+          <input id="newStuCnName" type="text" placeholder="例如：林子轩" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">学校班级 (选填，如 2G / 1S)</label>
+          <input id="newStuCls" type="text" placeholder="例如：2G" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeAddStudentModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 cursor-pointer">取消</button>
+        <button type="button" onclick="confirmAddStudent()" class="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 cursor-pointer">确认添加</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden items-center gap-2 px-4 py-3 rounded-xl bg-slate-900 text-white text-xs font-semibold shadow-lg no-print">
+    <span class="text-emerald-400">✔</span>
+    <span id="toastMsg">操作成功</span>
+  </div>
+
+  <script>
+    function safeCreateIcons() {
+      try {
+        if (window.lucide && typeof window.lucide.createIcons === "function") {
+          window.lucide.createIcons();
+        }
+      } catch (e) {}
+    }
+
+    // =========================================================================
+    // 1. 五大科目配置、5 级状态体系 & Standard 1 / Standard 2 双语评语词典
+    // =========================================================================
+    const SUBJECTS = [
+      { key: "华语", enName: "Chinese (BC)", code: "BC", label: "华语 (BC)", shortIcon: "华", color: "from-rose-600 to-orange-500", barColor: "bg-rose-500", lightBg: "bg-rose-50/70", borderCls: "border-rose-200", badgeCls: "bg-rose-50 text-rose-700 border-rose-200", defaultTeacher: "Teacher Tan" },
+      { key: "国语", enName: "Bahasa Melayu (BM)", code: "BM", label: "国语 (BM)", shortIcon: "国", color: "from-emerald-600 to-teal-500", barColor: "bg-emerald-500", lightBg: "bg-emerald-50/70", borderCls: "border-emerald-200", badgeCls: "bg-emerald-50 text-emerald-700 border-emerald-200", defaultTeacher: "Teacher Aisyah" },
+      { key: "英语", enName: "English (BI)", code: "BI", label: "英语 (BI)", shortIcon: "英", color: "from-indigo-600 to-blue-500", barColor: "bg-indigo-500", lightBg: "bg-indigo-50/70", borderCls: "border-indigo-200", badgeCls: "bg-indigo-50 text-indigo-700 border-indigo-200", defaultTeacher: "Teacher Rachel" },
+      { key: "数学", enName: "Mathematics (MM)", code: "MM", label: "数学 (MM)", shortIcon: "数", color: "from-amber-500 to-orange-500", barColor: "bg-amber-500", lightBg: "bg-amber-50/70", borderCls: "border-amber-200", badgeCls: "bg-amber-50 text-amber-700 border-amber-200", defaultTeacher: "Teacher Lee" },
+      { key: "科学", enName: "Science (SC)", code: "SC", label: "科学 (SC)", shortIcon: "科", color: "from-purple-600 to-violet-500", barColor: "bg-purple-500", lightBg: "bg-purple-50/70", borderCls: "border-purple-200", badgeCls: "bg-purple-50 text-purple-700 border-purple-200", defaultTeacher: "Teacher Wong" }
+    ];
+
+    const MONTHS = ["一月", "二月", "三月", "四月", "五月", "六月"];
+    const MONTH_EN_MAP = { "一月": "January", "二月": "February", "三月": "March", "四月": "April", "五月": "May", "六月": "June" };
+
+    const STATUS_OPTIONS = [
+      { key: "Excellent", short: "🌟 Exc",  label: "🌟 Excellent (优异)", activeClass: "bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-500/30", pillClass: "bg-emerald-100 text-emerald-800 border-emerald-300", idleClass: "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700" },
+      { key: "Good",      short: "👍 Good", label: "👍 Good (良好)",      activeClass: "bg-brand-600 text-white shadow-sm ring-2 ring-brand-500/30",     pillClass: "bg-brand-50 text-brand-700 border-brand-200",       idleClass: "text-slate-600 hover:bg-brand-50 hover:text-brand-700" },
+      { key: "Improving", short: "📈 Imp",  label: "📈 Improving (进步中)", activeClass: "bg-cyan-600 text-white shadow-sm ring-2 ring-cyan-500/30",       pillClass: "bg-cyan-100 text-cyan-800 border-cyan-300",         idleClass: "text-slate-600 hover:bg-cyan-50 hover:text-cyan-700" },
+      { key: "Fair",      short: "👌 Fair", label: "👌 Fair (尚可)",      activeClass: "bg-amber-500 text-white shadow-sm ring-2 ring-amber-500/30",     pillClass: "bg-amber-100 text-amber-800 border-amber-300",      idleClass: "text-slate-600 hover:bg-amber-50 hover:text-amber-700" },
+      { key: "Poor",      short: "⚠️ Poor", label: "⚠️ Poor (需加强)",    activeClass: "bg-rose-600 text-white shadow-sm ring-2 ring-rose-500/30",       pillClass: "bg-rose-100 text-rose-800 border-rose-300",         idleClass: "text-slate-600 hover:bg-rose-50 hover:text-rose-700" }
+    ];
+
+    // 融合 Standard 1 与 Standard 2 进阶考点的评语库
+    const SUBJECT_COMMENT_PRESETS = {
+      "华语": [
+        "A. 词汇/听写没背熟",
+        "B. 粗心看错题目关键字",
+        "C. 汉语拼音/多音多义字与同音字容易混淆",
+        "D. 汉字部首、笔画笔顺与形近字辨析需加强",
+        "E. 量词、关联词（因为…所以/虽然…但是）运用不熟",
+        "F. 造句与扩句结构不完整，常漏写标点符号",
+        "G. 华语阅读理解找不到关键句，主观题作答不完整",
+        "H. 看图写段/短文写作词汇量较少，句型较偏向白话",
+        "I. 中文字体书写不够工整/出格，需注意坐姿与笔画",
+        "K. 识字量大、语感佳，能举一反三灵活造句与写段（表扬）",
+        "L. 听写与课堂测验表现优异，中文字迹端正美观（表扬）"
+      ],
+      "国语": [
+        "A. 词汇/听写没背熟",
+        "B. 粗心看错题目关键字",
+        "C. Kosa Kata 国语词汇量不足，影响理解题意",
+        "D. Tatabahasa 语法（Imbuhan 词缀 / Kata Sendi Nama）易混淆",
+        "E. Bina Ayat 造句与看图写句结构不完整",
+        "F. Pemahaman 国语阅读理解主观题（KBAT）审题需提升",
+        "G. 国语听写（Ejaan）与造句准确率高，掌握稳健（表扬）"
+      ],
+      "英语": [
+        "A. 词汇/听写没背熟",
+        "B. 粗心看错题目关键字",
+        "C. Phonics 拼读与二年级高频 Vocabulary 需多加积累",
+        "D. Grammar 语法（Present/Past Tense 时态、Prepositions）常出错",
+        "E. Sentence Writing 英文造句结构、大小写与标点需留意",
+        "F. Reading Comprehension 英文阅读理解审题能力待加强",
+        "G. 课堂英语表达自信，Spelling 与语法运用优异（表扬）"
+      ],
+      "数学": [
+        "A. 词汇/听写没背熟",
+        "B. 粗心看错题目关键字",
+        "C. 基础计算/公式未掌握",
+        "D. 1000以内进位加法 / 退位减法竖式计算容易粗心",
+        "E. 乘法口诀表（Times Tables）与基础除法尚未背熟",
+        "F. 数学两步应用题（文字题）审题不清，列式容易出错",
+        "G. 数感敏锐、逻辑清晰，竖式与心算准确率高（表扬）"
+      ],
+      "科学": [
+        "A. 词汇/听写没背熟",
+        "B. 粗心看错题目关键字",
+        "C. 基础计算/公式未掌握",
+        "D. 科学核心名词与单元概念（人类/动物/植物/亮与暗）记忆不牢",
+        "E. 科学程序技能（观察、分类、推断题）作答不够完整",
+        "F. 对科学实验现象充满好奇，课堂互动与作答积极（表扬）"
+      ]
+    };
+
+    const COMMENT_EN_DICTIONARY = {
+      "A. 词汇/听写没背熟": "vocabulary & dictation retention (needs more revision on spelling/dictation)",
+      "B. 粗心看错题目关键字": "careful reading of question keywords (tends to misread key instructions)",
+      "C. 基础计算/公式未掌握": "foundational calculation & formula application",
+      "C. 汉语拼音/多音多义字与同音字容易混淆": "Hanyu Pinyin, polyphonic characters & homophones",
+      "D. 汉字部首、笔画笔顺与形近字辨析需加强": "Chinese character radicals, stroke order & look-alike characters",
+      "E. 量词、关联词（因为…所以/虽然…但是）运用不熟": "Chinese measure words & conjunctions (e.g., because...therefore)",
+      "F. 造句与扩句结构不完整，常漏写标点符号": "sentence expansion & punctuation in Chinese sentence building",
+      "G. 华语阅读理解找不到关键句，主观题作答不完整": "locating key clues & answering Chinese reading comprehension in full sentences",
+      "H. 看图写段/短文写作词汇量较少，句型较偏向白话": "vocabulary variety & written expression in paragraph composition",
+      "I. 中文字体书写不够工整/出格，需注意坐姿与笔画": "Chinese handwriting neatness & stroke alignment",
+      "K. 识字量大、语感佳，能举一反三灵活造句与写段（表扬）": "strong character bank & creative paragraph writing (commendable!)",
+      "L. 听写与课堂测验表现优异，中文字迹端正美观（表扬）": "excellent dictation scores & neat Chinese handwriting (commendable!)",
+      "C. Kosa Kata 国语词汇量不足，影响理解题意": "BM Kosa Kata (vocabulary bank) for understanding questions",
+      "D. Tatabahasa 语法（Imbuhan 词缀 / Kata Sendi Nama）易混淆": "BM Tatabahasa (Imbuhan affixes & prepositions)",
+      "E. Bina Ayat 造句与看图写句结构不完整": "BM Bina Ayat sentence construction & grammar structure",
+      "F. Pemahaman 国语阅读理解主观题（KBAT）审题需提升": "BM Pemahaman reading comprehension & KBAT questions",
+      "G. 国语听写（Ejaan）与造句准确率高，掌握稳健（表扬）": "high accuracy in BM Ejaan & sentence building (commendable!)",
+      "C. Phonics 拼读与二年级高频 Vocabulary 需多加积累": "English phonics & core vocabulary retention",
+      "D. Grammar 语法（Present/Past Tense 时态、Prepositions）常出错": "English Grammar (Present/Past Tense & prepositions)",
+      "E. Sentence Writing 英文造句结构、大小写与标点需留意": "English sentence construction, capitalization & punctuation",
+      "F. Reading Comprehension 英文阅读理解审题能力待加强": "English reading comprehension & locating key answers",
+      "G. 课堂英语表达自信，Spelling 与语法运用优异（表扬）": "confident spoken English, strong Spelling & grammar (commendable!)",
+      "D. 1000以内进位加法 / 退位减法竖式计算容易粗心": "vertical addition with carrying & subtraction with borrowing within 1000",
+      "E. 乘法口诀表（Times Tables）与基础除法尚未背熟": "multiplication tables (Times Tables) & basic division concepts",
+      "F. 数学两步应用题（文字题）审题不清，列式容易出错": "understanding Math word problems (应用题) & setting up equations",
+      "G. 数感敏锐、逻辑清晰，竖式与心算准确率高（表扬）": "strong number sense, clear logic & high calculation accuracy (commendable!)",
+      "D. 科学核心名词与单元概念（人类/动物/植物/亮与暗）记忆不牢": "core Science terms & unit concepts",
+      "E. 科学程序技能（观察、分类、推断题）作答不够完整": "Science process skills (observation, classification & inference questions)",
+      "F. 对科学实验现象充满好奇，课堂互动与作答积极（表扬）": "great curiosity in Science & active classroom participation (commendable!)"
+    };
+
+    const OTHERS_EN_DICTIONARY = {
+      "非常棒，专心": "Very attentive and focused during lessons",
+      "周测分数逐周下滑，需加强复习": "Weekly quiz scores dipped recently; more revision on past topics is needed",
+      "华语听写进步显著，字迹也越来越端正！": "Significant improvement in Chinese dictation and much neater handwriting!",
+      "课堂专心听讲，朗读课文声音洪亮有感情": "Listens attentively in class and reads aloud clearly with great expression",
+      "建议每天在家朗读课文10分钟，温习听写生字": "We recommend 10 minutes of daily reading aloud at home to reinforce new words",
+      "写字时需注意笔顺与田字格位置，切勿急躁": "Needs to pay attention to stroke order and grid alignment when writing",
+      "做理解题时，请先圈出题目里的关键字再作答": "Encouraged to circle key question words first before answering comprehension items"
+    };
+
+    const QUICK_OTHERS_PHRASES = [
+      "非常棒，专心",
+      "华语听写进步显著，字迹也越来越端正！",
+      "课堂专心听讲，朗读课文声音洪亮有感情",
+      "建议每天在家朗读课文10分钟，温习听写生字",
+      "写字时需注意笔顺与田字格位置，切勿急躁",
+      "做理解题时，请先圈出题目里的关键字再作答"
+    ];
+
+    function translateCommentToCN(rawComment) {
+      if (!rawComment) return "";
+      return rawComment.replace(/^[A-Z]\.\s*/, "").replace(/（表扬）/g, "").trim();
+    }
+
+    function translateCommentToEN(rawComment) {
+      if (!rawComment) return "";
+      return COMMENT_EN_DICTIONARY[rawComment] || rawComment.replace(/^[A-Z]\.\s*/, "");
+    }
+
+    function translateOthersToEN(rawOthers) {
+      if (!rawOthers) return "";
+      if (OTHERS_EN_DICTIONARY[rawOthers]) return OTHERS_EN_DICTIONARY[rawOthers];
+      return rawOthers.split(/[；;]/).map(part => {
+        const p = part.trim();
+        return OTHERS_EN_DICTIONARY[p] || p;
+      }).join("; ");
+    }
+
+    // =========================================================================
+    // 2. 一年级 (17人) 与 二年级 (16人) 真实学生名单与初始数据
+    // =========================================================================
+    const INITIAL_STUDENTS_STD1 = [
+      { id: "s1_1",  no: 1,  name: "Averly Tee Tze Nin",     cnName: "郑子宁", cls: "1S" },
+      { id: "s1_2",  no: 2,  name: "Howard Pang Hao Wen",    cnName: "彭浩文", cls: "1S" },
+      { id: "s1_3",  no: 3,  name: "Lew Jun Meng",           cnName: "刘军萌", cls: "1S" },
+      { id: "s1_4",  no: 4,  name: "Kong Hao Xuan",          cnName: "龚皓轩", cls: "1S" },
+      { id: "s1_5",  no: 5,  name: "Yuen Zi Cheng",          cnName: "袁釨洆", cls: "1T" },
+      { id: "s1_6",  no: 6,  name: "Yuen Zi Jie",            cnName: "袁釨洁", cls: "1T" },
+      { id: "s1_7",  no: 7,  name: "Sheak Sinn Yuet",        cnName: "石善悦", cls: "1T" },
+      { id: "s1_8",  no: 8,  name: "Kayla loke mun way",     cnName: "陆文慰", cls: "1T" },
+      { id: "s1_9",  no: 9,  name: "Ng Shyi Han",            cnName: "黄诗涵", cls: "1N" },
+      { id: "s1_10", no: 10, name: "Daven Wong",             cnName: "黄戴文", cls: "1N" },
+      { id: "s1_11", no: 11, name: "Wong Hui Rou",           cnName: "黄慧柔", cls: "1N" },
+      { id: "s1_12", no: 12, name: "Wong Shi Qi",            cnName: "黄诗淇", cls: "1N" },
+      { id: "s1_13", no: 13, name: "Ian Liew Guan Yi",       cnName: "刘冠毅", cls: "1M" },
+      { id: "s1_14", no: 14, name: "Wong Khai Siang",        cnName: "黄铠祥", cls: "1M" },
+      { id: "s1_15", no: 15, name: "Hii Jia Neng",           cnName: "许佳能", cls: "1G" },
+      { id: "s1_16", no: 16, name: "Lee Rui Qing",           cnName: "李睿晴", cls: "1C" },
+      { id: "s1_17", no: 17, name: "Jayden chooi Zhi Hong",  cnName: "崔智鋐", cls: "1R" }
+    ];
+
+    // 完整还原《LK Student Progress 2027》与《2026 LK Year-End Assessment》的二年级 16 名学生名单
+    const INITIAL_STUDENTS_STD2 = [
+      { id: "s2_1",  no: 1,  name: "Lai Jing Xuan",          cnName: "赖婧媗", cls: "2G" },
+      { id: "s2_2",  no: 2,  name: "Chong Zy Xin",           cnName: "张芷欣", cls: "2G" },
+      { id: "s2_3",  no: 3,  name: "Chook Z-Qian (Damien)",  cnName: "祝智谦", cls: "2G" },
+      { id: "s2_4",  no: 4,  name: "Han Yi Ting",            cnName: "韓宜庭", cls: "2G" },
+      { id: "s2_5",  no: 5,  name: "Tan Jia Yin",            cnName: "陈泇颖", cls: "2H" },
+      { id: "s2_6",  no: 6,  name: "Soo Rui Zhe",            cnName: "苏芮樍", cls: "2H" },
+      { id: "s2_7",  no: 7,  name: "Celestia Choo Yann Yee", cnName: "朱恩谊", cls: "2H" },
+      { id: "s2_8",  no: 8,  name: "Giselle Lim Zhyi Qing",  cnName: "林子晴", cls: "2H" },
+      { id: "s2_9",  no: 9,  name: "Wong Re Ying",           cnName: "黄日盈", cls: "2S" },
+      { id: "s2_10", no: 10, name: "Liang Jia Hong",         cnName: "梁佳宏", cls: "2S" },
+      { id: "s2_11", no: 11, name: "Claire Ng Yu Xuan",      cnName: "吴俞萱", cls: "2T" },
+      { id: "s2_12", no: 12, name: "Tan Xin Yee",            cnName: "陈欣宜", cls: "2T" },
+      { id: "s2_13", no: 13, name: "Zheng Shi Yue",          cnName: "郑诗妤", cls: "2M" },
+      { id: "s2_14", no: 14, name: "Ng Yan Ning",            cnName: "吴彦宁", cls: "2M" },
+      { id: "s2_15", no: 15, name: "Wong Zi Tao",            cnName: "黄子滔", cls: "2N" },
+      { id: "s2_16", no: 16, name: "Tay Xin Tian",           cnName: "戴芯恬", cls: "2C" }
+    ];
+
+    function buildDefaultSTD1Data(subKey, teacherName) {
+      const c2Default = subKey === "数学" ? "C. 基础计算/公式未掌握" : "C. 汉语拼音/多音多义字与同音字容易混淆";
+      const base = {
+        "s1_1":  { status: "Good",      w1: "6", w2: "6", w3: "7", w4: "5",  c1: "", c2: "", c3: "", others: "", teacher: teacherName },
+        "s1_2":  { status: "Poor",      w1: "3", w2: "5", w3: "6", w4: "6",  c1: "A. 词汇/听写没背熟", c2: "B. 粗心看错题目关键字", c3: "", others: "", teacher: teacherName },
+        "s1_3":  { status: "Improving", w1: "5", w2: "6", w3: "7", w4: "8",  c1: "", c2: "", c3: "", others: "", teacher: teacherName },
+        "s1_4":  { status: "Improving", w1: "4", w2: "6", w3: "7", w4: "8",  c1: "", c2: "", c3: "", others: "", teacher: teacherName },
+        "s1_5":  { status: "Excellent", w1: "8", w2: "9", w3: "9", w4: "10", c1: "L. 听写与课堂测验表现优异，中文字迹端正美观（表扬）", c2: "", c3: "", others: "非常棒，专心", teacher: teacherName },
+        "s1_6":  { status: "Poor",      w1: "3", w2: "3", w3: "4", w4: "3",  c1: "B. 粗心看错题目关键字", c2: c2Default, c3: "A. 词汇/听写没背熟", others: "", teacher: teacherName },
+        "s1_17": { status: "Fair",      w1: "8", w2: "6", w3: "4", w4: "2",  c1: "A. 词汇/听写没背熟", c2: "", c3: "", others: "周测分数逐周下滑，需加强复习", teacher: teacherName }
+      };
+      for (let i = 7; i <= 16; i++) {
+        const isOdd = i % 2 === 1;
+        base["s1_" + i] = {
+          status: "Good", w1: isOdd ? "6" : "5", w2: isOdd ? "7" : "6", w3: isOdd ? "3" : "6", w4: "8",
+          c1: "", c2: "", c3: "", others: "", teacher: teacherName
+        };
+      }
+      return base;
+    }
+
+    // 根据《2026 LK Year-End Assessment》中二年级学生的真实强弱科表现生成初始随堂记录
+    function buildDefaultSTD2Data(subKey, teacherName) {
+      return {
+        "s2_1":  { status: "Good",      w1: "6", w2: "7", w3: "7", w4: "8",  c1: "", c2: "", c3: "", others: "课堂专心听讲，朗读课文声音洪亮有感情", teacher: teacherName },
+        "s2_2":  { status: "Excellent", w1: "8", w2: "8", w3: "9", w4: "9",  c1: "L. 听写与课堂测验表现优异，中文字迹端正美观（表扬）", c2: "", c3: "", others: "非常棒，专心", teacher: teacherName },
+        "s2_3":  { status: "Good",      w1: "6", w2: "6", w3: "7", w4: "7",  c1: "", c2: "", c3: "", others: "", teacher: teacherName },
+        "s2_4":  { status: "Excellent", w1: "8", w2: "9", w3: "8", w4: "9",  c1: "K. 识字量大、语感佳，能举一反三灵活造句与写段（表扬）", c2: "", c3: "", others: "华语听写进步显著，字迹也越来越端正！", teacher: teacherName },
+        "s2_5":  { status: "Fair",      w1: "5", w2: "5", w3: "6", w4: "6",  c1: "B. 粗心看错题目关键字", c2: "", c3: "", others: "做理解题时，请先圈出题目里的关键字再作答", teacher: teacherName },
+        "s2_6":  { status: "Good",      w1: "6", w2: "6", w3: "7", w4: "7",  c1: "", c2: "", c3: "", others: "", teacher: teacherName },
+        "s2_7":  { status: "Excellent", w1: "9", w2: "9", w3: "9", w4: "10", c1: "L. 听写与课堂测验表现优异，中文字迹端正美观（表扬）", c2: "", c3: "", others: "非常棒，专心", teacher: teacherName },
+        "s2_8":  { status: "Excellent", w1: "8", w2: "9", w3: "9", w4: "9",  c1: "", c2: "", c3: "", others: "非常棒，专心", teacher: teacherName },
+        "s2_9":  { status: "Good",      w1: "6", w2: "6", w3: "7", w4: "7",  c1: "", c2: "", c3: "", others: "", teacher: teacherName },
+        "s2_10": { status: "Excellent", w1: "8", w2: "9", w3: "9", w4: "10", c1: "K. 识字量大、语感佳，能举一反三灵活造句与写段（表扬）", c2: "", c3: "", others: "", teacher: teacherName },
+        "s2_11": { status: "Improving", w1: "5", w2: "6", w3: "7", w4: "8",  c1: "", c2: "", c3: "", others: "华语听写进步显著，字迹也越来越端正！", teacher: teacherName },
+        "s2_12": { status: "Good",      w1: "7", w2: "7", w3: "8", w4: "8",  c1: "", c2: "", c3: "", others: "", teacher: teacherName },
+        "s2_13": { status: "Good",      w1: "6", w2: "7", w3: "6", w4: "7",  c1: "", c2: "", c3: "", others: "", teacher: teacherName },
+        "s2_14": { status: "Fair",      w1: "4", w2: "5", w3: "5", w4: "6",  c1: "A. 词汇/听写没背熟", c2: "F. 造句与扩句结构不完整，常漏写标点符号", c3: "", others: "建议每天在家朗读课文10分钟，温习听写生字", teacher: teacherName },
+        "s2_15": { status: "Poor",      w1: "3", w2: "3", w3: "4", w4: "4",  c1: "A. 词汇/听写没背熟", c2: "B. 粗心看错题目关键字", c3: "", others: "建议每天在家朗读课文10分钟，温习听写生字", teacher: teacherName },
+        "s2_16": { status: "Good",      w1: "6", w2: "7", w3: "7", w4: "8",  c1: "", c2: "", c3: "", others: "", teacher: teacherName }
+      };
+    }
+
+    function createInitialMultiGradeDB() {
+      const std1Records = {};
+      const std2Records = {};
+      SUBJECTS.forEach(sub => {
+        std1Records[sub.key] = {
+          "一月": buildDefaultSTD1Data(sub.key, sub.defaultTeacher),
+          "二月": buildDefaultSTD1Data(sub.key, sub.defaultTeacher)
+        };
+        std2Records[sub.key] = {
+          "一月": buildDefaultSTD2Data(sub.key, sub.defaultTeacher),
+          "二月": buildDefaultSTD2Data(sub.key, sub.defaultTeacher)
+        };
+      });
+
+      return {
+        commentPresets: JSON.parse(JSON.stringify(SUBJECT_COMMENT_PRESETS)),
+        cloudConfig: {
+          gasUrlSTD1: "",
+          gasUrlSTD2: "",
+          autoSync: false,
+          lastSyncTime: ""
+        },
+        grades: {
+          "STD1": {
+            label: "Standard 1 (一年级)",
+            shortLabel: "一年级",
+            students: JSON.parse(JSON.stringify(INITIAL_STUDENTS_STD1)),
+            records: std1Records
+          },
+          "STD2": {
+            label: "Standard 2 (二年级)",
+            shortLabel: "二年级",
+            students: JSON.parse(JSON.stringify(INITIAL_STUDENTS_STD2)),
+            records: std2Records
+          }
+        }
+      };
+    }
+
+    const STORAGE_KEY = "LK_STD1_STD2_CLOUD_SYNC_DB_V1";
+    let appDB = loadAppDB();
+    // 默认展示用户刚请求的二年级（Standard 2），可随时切回一年级（Standard 1）
+    let currentGrade = "STD2";
+    let currentSubject = "华语";
+    let currentMonth = "一月";
+    let activeDrawerStudentId = null;
+    let activeHolisticStudentId = null;
+    let selectedPrintStudentIds = new Set(getActiveGradeObj().students.map(s => s.id));
+    let autoSyncTimer = null;
+
+    function loadAppDB() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.grades && parsed.grades.STD1 && parsed.grades.STD2 && parsed.grades.STD2.students.length >= 8) {
+            return parsed;
+          }
+        }
+      } catch (e) {
+        console.error("Load DB error:", e);
+      }
+      const fresh = createInitialMultiGradeDB();
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh)); } catch (e) {}
+      return fresh;
+    }
+
+    function getActiveGradeObj() {
+      return appDB.grades[currentGrade];
+    }
+
+    function saveDB() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appDB));
+        // 若开启了自动云端推送，则防抖 2 秒后自动同步至 Google Sheet
+        if (appDB.cloudConfig && appDB.cloudConfig.autoSync) {
+          const url = currentGrade === "STD1" ? appDB.cloudConfig.gasUrlSTD1 : appDB.cloudConfig.gasUrlSTD2;
+          if (url) {
+            if (autoSyncTimer) clearTimeout(autoSyncTimer);
+            autoSyncTimer = setTimeout(() => {
+              pushToGoogleSheet(false, true);
+            }, 2000);
+          }
+        }
+      } catch (err) {
+        console.error("Save error:", err);
+      }
+    }
+
+    function getStudentRecord(subject, month, studentId) {
+      const g = getActiveGradeObj();
+      if (!g.records[subject]) g.records[subject] = {};
+      if (!g.records[subject][month]) g.records[subject][month] = {};
+      if (!g.records[subject][month][studentId]) {
+        const subMeta = SUBJECTS.find(s => s.key === subject);
+        g.records[subject][month][studentId] = {
+          status: "Good",
+          w1: "", w2: "", w3: "", w4: "",
+          c1: "", c2: "", c3: "",
+          others: "",
+          teacher: subMeta ? subMeta.defaultTeacher : "Teacher Tan"
+        };
+      }
+      return g.records[subject][month][studentId];
+    }
+
+    function getSubjectPresets(subKey) {
+      if (!appDB.commentPresets[subKey]) {
+        appDB.commentPresets[subKey] = [...(SUBJECT_COMMENT_PRESETS[subKey] || SUBJECT_COMMENT_PRESETS["华语"])];
+      }
+      return appDB.commentPresets[subKey];
+    }
+
+    // =========================================================================
+    // 3. Google Sheet 双向实时同步核心函数 (GET 拉取 & POST 推送)
+    // =========================================================================
+    function openCloudSyncModal() {
+      const cfg = appDB.cloudConfig || {};
+      document.getElementById("gasUrlSTD1").value = cfg.gasUrlSTD1 || "";
+      document.getElementById("gasUrlSTD2").value = cfg.gasUrlSTD2 || "";
+      document.getElementById("autoSyncToggle").checked = !!cfg.autoSync;
+      document.getElementById("lastSyncTimeText").textContent = cfg.lastSyncTime || "尚未执行云端同步（当前为本地实时保存）";
+
+      const modal = document.getElementById("cloudSyncModalBackdrop");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    }
+
+    function closeCloudSyncModal() {
+      const modal = document.getElementById("cloudSyncModalBackdrop");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    function saveCloudConfig() {
+      if (!appDB.cloudConfig) appDB.cloudConfig = {};
+      appDB.cloudConfig.gasUrlSTD1 = document.getElementById("gasUrlSTD1").value.trim();
+      appDB.cloudConfig.gasUrlSTD2 = document.getElementById("gasUrlSTD2").value.trim();
+      appDB.cloudConfig.autoSync = document.getElementById("autoSyncToggle").checked;
+      saveDB();
+      updateCloudStatusPill();
+    }
+
+    function getCurrentGradeGasUrl() {
+      const cfg = appDB.cloudConfig || {};
+      return currentGrade === "STD1" ? cfg.gasUrlSTD1 : (cfg.gasUrlSTD2 || cfg.gasUrlSTD1);
+    }
+
+    function updateCloudStatusPill() {
+      const url = getCurrentGradeGasUrl();
+      const dot = document.getElementById("cloudStatusDot");
+      const txt = document.getElementById("cloudStatusText");
+      if (url) {
+        dot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+        txt.textContent = appDB.cloudConfig.autoSync ? "☁️ 云端自动同步已开启" : "☁️ 已连接 Google Sheet";
+      } else {
+        dot.className = "w-2 h-2 rounded-full bg-sky-500";
+        txt.textContent = "☁️ 绑定 Google Sheet 同步";
+      }
+    }
+
+    // ⬇️ 从 Google Sheet 拉取最新全科数据 (doGet)
+    async function pullFromGoogleSheet() {
+      const url = getCurrentGradeGasUrl();
+      if (!url) {
+        openCloudSyncModal();
+        showToast("请先粘贴您部署好的 Google Apps Script Web App URL！");
+        return;
+      }
+
+      try {
+        showToast("⬇️ 正在从 Google Sheet 拉取最新五科数据...");
+        const response = await fetch(`${url}?action=pull&grade=${currentGrade}&t=${Date.now()}`);
+        const data = await response.json();
+
+        if (data && data.status === "success" && data.records) {
+          const g = getActiveGradeObj();
+          let updatedCount = 0;
+
+          Object.keys(data.records).forEach(subName => {
+            if (!g.records[subName]) g.records[subName] = {};
+            const monthsObj = data.records[subName];
+
+            Object.keys(monthsObj).forEach(mName => {
+              if (!g.records[subName][mName]) g.records[subName][mName] = {};
+              const stuMap = monthsObj[mName];
+
+              Object.keys(stuMap).forEach(noKey => {
+                const cloudRow = stuMap[noKey];
+                // 匹配本地学号或英文姓名
+                let targetStu = g.students.find(s => s.no === cloudRow.no || s.name.toLowerCase() === (cloudRow.name || "").toLowerCase());
+                if (!targetStu && cloudRow.name) {
+                  // 若云端有新增学生，自动加入本地名单
+                  targetStu = {
+                    id: `${currentGrade.toLowerCase()}_${Date.now()}_${cloudRow.no}`,
+                    no: cloudRow.no,
+                    name: cloudRow.name,
+                    cnName: cloudRow.cnName || "",
+                    cls: ""
+                  };
+                  g.students.push(targetStu);
+                }
+                if (targetStu) {
+                  g.records[subName][mName][targetStu.id] = {
+                    status: cloudRow.status || "Good",
+                    w1: cloudRow.w1 || "",
+                    w2: cloudRow.w2 || "",
+                    w3: cloudRow.w3 || "",
+                    w4: cloudRow.w4 || "",
+                    c1: cloudRow.c1 || "",
+                    c2: cloudRow.c2 || "",
+                    c3: cloudRow.c3 || "",
+                    others: cloudRow.others || "",
+                    teacher: cloudRow.teacher || "Teacher Tan"
+                  };
+                  updatedCount++;
+                }
+              });
+            });
+          });
+
+          appDB.cloudConfig.lastSyncTime = new Date().toLocaleString() + " (拉取成功)";
+          saveDB();
+          renderDashboard();
+          closeCloudSyncModal();
+          showToast(`✅ 已成功从 Google Sheet 同步更新 ${updatedCount} 条学科记录！`);
+        } else {
+          showToast("⚠️ 云端返回格式异常，请确认脚本已按最新 Code.gs 部署。");
+        }
+      } catch (err) {
+        console.error("Pull error:", err);
+        showToast("⚠️ 拉取失败，请检查 Web App URL 权限是否已设为「任何人 (Anyone)」。");
+      }
+    }
+
+    // ⬆️ 将本地单科或全部五科数据实时推送至 Google Sheet (doPost)
+    async function pushToGoogleSheet(syncAllSubjects = false, isSilent = false) {
+      const url = getCurrentGradeGasUrl();
+      if (!url) {
+        if (!isSilent) {
+          openCloudSyncModal();
+          showToast("请先配置您的 Google Apps Script Web App URL！");
+        }
+        return;
+      }
+
+      const g = getActiveGradeObj();
+      const targetSubjects = (syncAllSubjects || currentSubject === "ALL")
+        ? SUBJECTS.map(s => s.key)
+        : [currentSubject];
+
+      const subjectsData = {};
+      targetSubjects.forEach(subKey => {
+        subjectsData[subKey] = {};
+        g.students.forEach(stu => {
+          const rec = getStudentRecord(subKey, currentMonth, stu.id);
+          const rep = generateBilingualParentReport(stu, currentMonth, subKey);
+          subjectsData[subKey][stu.id] = {
+            ...rec,
+            bilingualWa: rep.combined
+          };
+        });
+      });
+
+      const payload = {
+        grade: currentGrade,
+        month: currentMonth,
+        students: g.students,
+        subjectsData
+      };
+
+      try {
+        if (!isSilent) showToast(`⬆️ 正在将 ${g.shortLabel} (${currentMonth}) 数据推送至 Google Sheet...`);
+        await fetch(url, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
+        });
+        appDB.cloudConfig.lastSyncTime = new Date().toLocaleString() + " (推送成功)";
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appDB));
+        const logEl = document.getElementById("lastSyncTimeText");
+        if (logEl) logEl.textContent = appDB.cloudConfig.lastSyncTime;
+        if (!isSilent) {
+          closeCloudSyncModal();
+          showToast(`✅ 已成功推送至 Google Sheet (${targetSubjects.join("、")})！`);
+        }
+      } catch (err) {
+        console.error("Push error:", err);
+        if (!isSilent) showToast("⚠️ 推送失败，请检查网络连接或 Web App URL。");
+      }
+    }
+
+    // =========================================================================
+    // 4. 年级切换（Standard 1 vs Standard 2）与辅助计算
+    // =========================================================================
+    function selectGrade(gradeKey) {
+      currentGrade = gradeKey;
+      const g = getActiveGradeObj();
+      selectedPrintStudentIds = new Set(g.students.map(s => s.id));
+      renderDashboard();
+      showToast(`已切换至：${g.label}（共 ${g.students.length} 名学生）`);
+    }
+
+    function updateGradeButtons() {
+      const btn1 = document.getElementById("gradeBtn-STD1");
+      const btn2 = document.getElementById("gradeBtn-STD2");
+      const count1 = appDB.grades.STD1.students.length;
+      const count2 = appDB.grades.STD2.students.length;
+
+      btn1.textContent = `🏫 一年级 (${count1}人)`;
+      btn2.textContent = `🏫 二年级 (${count2}人)`;
+
+      if (currentGrade === "STD1") {
+        btn1.className = "px-3 py-1.5 rounded-lg text-xs font-extrabold transition cursor-pointer bg-brand-600 text-white shadow-xs";
+        btn2.className = "px-3 py-1.5 rounded-lg text-xs font-extrabold transition cursor-pointer text-slate-600 hover:text-slate-900";
+      } else {
+        btn2.className = "px-3 py-1.5 rounded-lg text-xs font-extrabold transition cursor-pointer bg-brand-600 text-white shadow-xs";
+        btn1.className = "px-3 py-1.5 rounded-lg text-xs font-extrabold transition cursor-pointer text-slate-600 hover:text-slate-900";
+      }
+
+      const g = getActiveGradeObj();
+      document.getElementById("mainHeaderTitle").textContent = `${g.label} 五科评估与双语汇报中心`;
+    }
+
+    function calcAverage(rec) {
+      const vals = [rec.w1, rec.w2, rec.w3, rec.w4]
+        .map(v => parseFloat(v))
+        .filter(v => !isNaN(v));
+      if (vals.length === 0) return null;
+      const sum = vals.reduce((a, b) => a + b, 0);
+      return (sum / vals.length).toFixed(1);
+    }
+
+    function calcTrend(rec) {
+      const vals = [rec.w1, rec.w2, rec.w3, rec.w4]
+        .map(v => parseFloat(v))
+        .filter(v => !isNaN(v));
+      if (vals.length < 2) return { icon: "—", cls: "text-slate-400", diff: 0 };
+      const diff = vals[vals.length - 1] - vals[0];
+      if (diff >= 2) return { icon: "↑ 进步", cls: "text-emerald-600 font-bold", diff };
+      if (diff <= -2) return { icon: "↓ 退步", cls: "text-rose-600 font-bold", diff };
+      return { icon: "→ 稳定", cls: "text-slate-500", diff };
+    }
+
+    function getStudentAllSubjectsSummary(studentId, month) {
+      const subjectDetails = SUBJECTS.map(sub => {
+        const rec = getStudentRecord(sub.key, month, studentId);
+        const avgStr = calcAverage(rec);
+        const avgNum = avgStr !== null ? parseFloat(avgStr) : null;
+        const trend = calcTrend(rec);
+        const comments = [rec.c1, rec.c2, rec.c3].filter(Boolean);
+        return { sub, rec, avgStr, avgNum, trend, comments };
+      });
+
+      const validAvgs = subjectDetails.filter(d => d.avgNum !== null);
+      const overallAvg = validAvgs.length > 0
+        ? (validAvgs.reduce((acc, cur) => acc + cur.avgNum, 0) / validAvgs.length).toFixed(1)
+        : null;
+
+      let bestSub = null, weakSub = null;
+      if (validAvgs.length > 0) {
+        const sorted = [...validAvgs].sort((a, b) => b.avgNum - a.avgNum);
+        bestSub = sorted[0];
+        weakSub = sorted[sorted.length - 1];
+      }
+
+      let overallStatus = "Good";
+      const hasPoor = subjectDetails.some(d => d.rec.status === "Poor" || (d.avgNum !== null && d.avgNum < 5));
+      const hasFair = subjectDetails.some(d => d.rec.status === "Fair" || d.trend.diff <= -3);
+      const allExc = subjectDetails.every(d => d.rec.status === "Excellent" || (d.avgNum !== null && d.avgNum >= 8.5));
+      const anyImp = subjectDetails.some(d => d.rec.status === "Improving" || d.trend.diff >= 2);
+
+      if (allExc) overallStatus = "Excellent";
+      else if (hasPoor) overallStatus = "Poor";
+      else if (hasFair) overallStatus = "Fair";
+      else if (anyImp) overallStatus = "Improving";
+      else if (overallAvg !== null && parseFloat(overallAvg) < 5.5) overallStatus = "Fair";
+
+      return { subjectDetails, overallAvg, overallStatus, bestSub, weakSub };
+    }
+
+    function getStatusMeta(statusKey) {
+      return STATUS_OPTIONS.find(s => s.key === statusKey) || {
+        key: "Pending", short: "⏳ 未评", label: "⏳ 未评定",
+        activeClass: "bg-slate-400 text-white", pillClass: "bg-slate-100 text-slate-500 border-slate-200"
+      };
+    }
+
+    function getScoreColorClass(val) {
+      const num = parseFloat(val);
+      if (isNaN(num)) return "bg-white border-slate-200 text-slate-700";
+      if (num >= 8) return "bg-emerald-50 border-emerald-300 text-emerald-800 font-bold";
+      if (num >= 5) return "bg-indigo-50/70 border-indigo-200 text-indigo-900 font-semibold";
+      return "bg-rose-50 border-rose-300 text-rose-700 font-bold";
+    }
+
+    function getAvgBadgeClass(avg) {
+      if (avg === null) return "bg-slate-100 text-slate-400";
+      const num = parseFloat(avg);
+      if (num >= 8) return "bg-emerald-100 text-emerald-800";
+      if (num >= 5) return "bg-brand-50 text-brand-700";
+      return "bg-rose-100 text-rose-700";
+    }
+
+    // =========================================================================
+    // 5. 【核心引擎】中英双语 WhatsApp 家长汇报与中心月度寄语生成器
+    // =========================================================================
+    function generateBilingualParentReport(stu, month, scope = "ALL") {
+      const cnName = stu.cnName || stu.name.split(" ")[0];
+      const enName = stu.name;
+      const monthEn = MONTH_EN_MAP[month] || month;
+
+      if (scope !== "ALL") {
+        const subMeta = SUBJECTS.find(s => s.key === scope) || SUBJECTS[0];
+        const rec = getStudentRecord(scope, month, stu.id);
+        const avgStr = calcAverage(rec);
+        const avgNum = avgStr !== null ? parseFloat(avgStr) : null;
+        const trend = calcTrend(rec);
+        const comments = [rec.c1, rec.c2, rec.c3].filter(Boolean);
+        const isYellowOrRed = rec.status === "Poor" || rec.status === "Fair" || (avgNum !== null && avgNum < 6.0) || trend.diff <= -2;
+
+        const isMissingScores = avgStr === null;
+        const isMissingBottleneck = (rec.status === "Poor" || rec.status === "Fair") && comments.length === 0 && !rec.others;
+        const needsInteractiveGuidance = isMissingScores || isMissingBottleneck;
+        const guidancePrompt = `请问这位学生（${cnName}）本月的科目、分数或具体卡在哪个知识点？我来为您生成文案。`;
+
+        const wScoresText = `W1(*${rec.w1 || '-'}*) · W2(*${rec.w2 || '-'}*) · W3(*${rec.w3 || '-'}*) · W4(*${rec.w4 || '-'}*)`;
+        let cnBody = "", enBody = "";
+
+        if (!isYellowOrRed) {
+          const praisePointsCN = comments.length > 0 ? comments.map(translateCommentToCN).join("、") : "课堂核心词汇、句型理解与随堂练习";
+          const praisePointsEN = comments.length > 0 ? comments.map(translateCommentToEN).join(" & ") : "core classroom vocabulary, concept comprehension & weekly quizzes";
+          const extraCN = rec.others ? `老师也特别称赞孩子：*“${rec.others}”*！` : "孩子在课堂上总是充满干劲！";
+          const extraEN = rec.others ? `Teacher also highlighted: *"${translateOthersToEN(rec.others)}"*!` : "Always showing great enthusiasm during lessons!";
+
+          cnBody = [
+            `【📱 WhatsApp 中文版】`,
+            `👋 *${cnName}* 妈咪/爹地您好！🌸`,
+            `非常感谢您本月的紧密配合，*${cnName}* 在 *${month}* 的中心出勤非常稳定，在安亲班的功课习惯与课堂互动也表现得很棒！✨`,
+            ``,
+            `📚 *【${subMeta.label} · 核心学情分析】*（🌟/🟢 稳健优秀）`,
+            `本月四次随堂周测表现为：${wScoresText}，月均分达 *${avgStr || '—'}/10* 分！💪`,
+            `孩子本月在 *${praisePointsCN}* 掌握得非常扎实。${extraCN}`,
+            ``,
+            `🚀 *【下一阶段进阶目标】*`,
+            `接下来 *${rec.teacher || subMeta.defaultTeacher}* 会配合安亲督导老师，带 *${cnName}* 挑战 *高阶阅读审题与完整写段表达*，帮助孩子稳中求进，更上一层楼！📅✨`
+          ].join("\n");
+
+          enBody = [
+            `【📱 WhatsApp English Version】`,
+            `👋 Hello *${enName}*'s Mommy/Daddy! 🌸`,
+            `Thank you for your wonderful support! *${enName}* had great attendance in *${monthEn}* and cooperated very well during our daycare & homework sessions! ✨`,
+            ``,
+            `📚 *【${subMeta.enName} · Performance Summary】* (🌟/🟢 Strong & Steady)`,
+            `Monthly weekly quiz scores: ${wScoresText}, achieving a solid average of *${avgStr || '—'}/10*! 💪`,
+            `*${enName}* showed strong mastery in *${praisePointsEN}*. ${extraEN}`,
+            ``,
+            `🚀 *【Next Advanced Goal】*`,
+            `Moving forward, *${rec.teacher || subMeta.defaultTeacher}* and our daycare supervisors will guide *${enName}* toward *higher-order comprehension & structured writing application* to reach the next level! 📅✨`
+          ].join("\n");
+        } else {
+          const bottleneckCN = comments.length > 0 ? comments.map(translateCommentToCN).join("、") : (rec.others || "部分基础词汇记忆与题目关键字审题");
+          const bottleneckEN = comments.length > 0 ? comments.map(translateCommentToEN).join(" & ") : (translateOthersToEN(rec.others) || "foundational vocabulary retention & reading question keywords carefully");
+
+          const praiseOpeningCN = trend.diff > 0
+            ? `首先一定要肯定 *${cnName}*，本月在安亲班非常积极，周测也从月初的 *${rec.w1 || '-'}分* 一路努力追赶到了 *${rec.w4 || '-'}分*，不服输的态度非常值得表扬！👏`
+            : `首先想请妈咪/爹地放心，*${cnName}* 本月在安亲班完成功课的态度很端正，课堂上也很愿意跟随老师的步伐思考与作答！👏`;
+
+          const praiseOpeningEN = trend.diff > 0
+            ? `First, we want to praise *${enName}* for being very proactive in daycare and improving steadily from *${rec.w1 || '-'}* in W1 to *${rec.w4 || '-'}* in W4—such wonderful perseverance! 👏`
+            : `First, please be assured that *${enName}* has been very cooperative during daycare homework sessions and shows a positive attitude in class! 👏`;
+
+          cnBody = [
+            `【📱 WhatsApp 中文版】`,
+            `👋 *${cnName}* 妈咪/爹地您好！🌸`,
+            `感谢您本月的配合！${praiseOpeningCN}`,
+            ``,
+            `💡 *【${subMeta.label} · 本月学习卡点观察】*（🟡/🔴 温和关怀）`,
+            `本月周测记录为：${wScoresText}（均分 *${avgStr || '—'}/10*）。`,
+            `老师观察到孩子目前主要卡在：*${bottleneckCN}*，做题时偶尔会因为这几个小细节而失分。📚`,
+            ``,
+            `💪 *【科任老师 × 安亲督导协同补强计划】*`,
+            `请家长完全放心！接下来 *${rec.teacher || subMeta.defaultTeacher}* 已与安亲督导老师制定好配合方案：每天在安亲时段用 *10-15分钟进行一对一错题复盘与重点词汇听写巩固*，一步步帮 *${cnName}* 把基础打牢！📅✨`
+          ].join("\n");
+
+          enBody = [
+            `【📱 WhatsApp English Version】`,
+            `👋 Hello *${enName}*'s Mommy/Daddy! 🌸`,
+            `Thank you for your continuous support! ${praiseOpeningEN}`,
+            ``,
+            `💡 *【${subMeta.enName} · Gentle Learning Observation】* (🟡/🔴 Care & Support)`,
+            `Monthly quiz records: ${wScoresText} (Avg: *${avgStr || '—'}/10*).`,
+            `We noticed that *${enName}* is currently experiencing a small bottleneck in *${bottleneckEN}*, which caused a few avoidable point deductions. 📚`,
+            ``,
+            `💪 *【Subject Teacher × Daycare Action Plan】*`,
+            `Please rest assured! *${rec.teacher || subMeta.defaultTeacher}* and our daycare supervisors have set up a joint support plan: we will conduct *10–15 mins of daily 1-on-1 error review & targeted vocabulary reinforcement* during daycare hours to help *${enName}* build confidence steadily! 📅✨`
+          ].join("\n");
+        }
+
+        return {
+          cnBody, enBody,
+          combined: `${cnBody}\n\n────────────────────\n\n${enBody}`,
+          needsInteractiveGuidance, guidancePrompt, isYellowOrRed
+        };
+      }
+
+      // 五科综合汇报模式 (ALL)
+      const summary = getStudentAllSubjectsSummary(stu.id, month);
+      const validSubs = summary.subjectDetails.filter(d => d.avgNum !== null);
+      const weakSubs = summary.subjectDetails.filter(d =>
+        d.rec.status === "Poor" || d.rec.status === "Fair" || (d.avgNum !== null && d.avgNum < 6.0) || d.trend.diff <= -2
+      );
+      const strongSubs = summary.subjectDetails.filter(d => !weakSubs.includes(d) && d.avgNum !== null);
+
+      const allBottlenecksCN = [], allBottlenecksEN = [];
+      summary.subjectDetails.forEach(d => {
+        if (d.comments.length > 0) {
+          const nonPraise = d.comments.filter(c => !c.includes("表扬"));
+          if (nonPraise.length > 0) {
+            allBottlenecksCN.push(`*${d.sub.key}*（${nonPraise.map(translateCommentToCN).join("、")}）`);
+            allBottlenecksEN.push(`*${d.sub.code}* (${nonPraise.map(translateCommentToEN).join(" & ")})`);
+          }
+        } else if (d.rec.others && !d.rec.others.includes("非常棒")) {
+          allBottlenecksCN.push(`*${d.sub.key}*（${d.rec.others}）`);
+          allBottlenecksEN.push(`*${d.sub.code}* (${translateOthersToEN(d.rec.others)})`);
+        }
+      });
+
+      const isYellowOrRed = weakSubs.length > 0 || allBottlenecksCN.length > 0;
+      const isMissingAllScores = validSubs.length === 0;
+      const isMissingBottleneck = (summary.overallStatus === "Poor" || summary.overallStatus === "Fair") && allBottlenecksCN.length === 0;
+      const needsInteractiveGuidance = isMissingAllScores || isMissingBottleneck;
+      const guidancePrompt = `请问这位学生（${cnName}）本月的科目、分数或具体卡在哪个知识点？我来为您生成文案。`;
+
+      const fiveSubScoresCN = summary.subjectDetails.map(d => `${d.sub.key} *${d.avgStr || '-'}*`).join(" ｜ ");
+      const fiveSubScoresEN = summary.subjectDetails.map(d => `${d.sub.code} *${d.avgStr || '-'}*`).join(" | ");
+
+      let cnBody = "", enBody = "";
+
+      if (!isYellowOrRed) {
+        const bestNameCN = summary.bestSub ? `*${summary.bestSub.sub.label}*（均分 *${summary.bestSub.avgStr}*）` : "*五大核心科目*";
+        const bestNameEN = summary.bestSub ? `*${summary.bestSub.sub.enName}* (Avg *${summary.bestSub.avgStr}*)` : "*all 5 core subjects*";
+
+        cnBody = [
+          `【📱 WhatsApp 中文版】`,
+          `👋 *${cnName}* 妈咪/爹地您好！🌸`,
+          `非常感谢您本月的配合！*${cnName}* 在 *${month}* 的出勤非常稳定，在安亲班完成功课的效率与自律性都让老师们非常欣慰！✨`,
+          ``,
+          `📚 *【五科核心学情分析】*（🌟/🟢 均衡优异 · 总均分 *${summary.overallAvg || '-'}/10*）`,
+          `本月五科周测均分：${fiveSubScoresCN}。`,
+          `孩子在各科基础掌握得很扎实，尤其是 ${bestNameCN} 表现亮眼，课堂互动专注又积极！💪`,
+          ``,
+          `🚀 *【下一阶段进阶目标】*`,
+          `接下来各科老师会与安亲督导团队紧密配合，引导 *${cnName}* 加强 *跨学科高阶阅读审题（KBAT）与段落写作技巧*，向更高目标迈进！📅✨`
+        ].join("\n");
+
+        enBody = [
+          `【📱 WhatsApp English Version】`,
+          `👋 Hello *${enName}*'s Mommy/Daddy! 🌸`,
+          `Thank you for your wonderful support! *${enName}* had great attendance in *${monthEn}* and showed admirable self-discipline during our daycare homework sessions! ✨`,
+          ``,
+          `📚 *【5-Subject Performance Summary】* (🌟/🟢 Strong & Balanced · Overall Avg *${summary.overallAvg || '-'}/10*)`,
+          `Monthly quiz averages: ${fiveSubScoresEN}.`,
+          `*${enName}* demonstrated solid mastery across subjects—especially in ${bestNameEN}—with active and focused classroom participation! 💪`,
+          ``,
+          `🚀 *【Next Advanced Goal】*`,
+          `Moving forward, our subject teachers and daycare supervisors will guide *${enName}* in *higher-order thinking questions (KBAT) & structured paragraph writing*! 📅✨`
+        ].join("\n");
+      } else {
+        const strongPraiseCN = strongSubs.length > 0
+          ? `并且 *${strongSubs.slice(0, 2).map(d => d.sub.key).join("、")}* 保持着稳健表现（均分 *${strongSubs[0].avgStr}*）`
+          : `在随堂练习中也展现出了不服输的努力劲头`;
+        const strongPraiseEN = strongSubs.length > 0
+          ? `and maintained steady results in *${strongSubs.slice(0, 2).map(d => d.sub.code).join(" & ")}* (Avg *${strongSubs[0].avgStr}*)`
+          : `and showed admirable effort during weekly exercises`;
+
+        const bottleneckTextCN = allBottlenecksCN.length > 0
+          ? allBottlenecksCN.join("；")
+          : `*${weakSubs.map(d => d.sub.key).join("、")}* 的基础词汇听写与审题细节`;
+        const bottleneckTextEN = allBottlenecksEN.length > 0
+          ? allBottlenecksEN.join("; ")
+          : `foundational vocabulary & question keyword reading in *${weakSubs.map(d => d.sub.code).join(" & ")}*`;
+
+        cnBody = [
+          `【📱 WhatsApp 中文版】`,
+          `👋 *${cnName}* 妈咪/爹地您好！🌸`,
+          `首先想请您放心，*${cnName}* 本月在中心出勤稳定，在安亲班非常有礼貌、也很愿意配合督导老师完成每日功课，${strongPraiseCN}！👏✨`,
+          ``,
+          `💡 *【五科学情与卡点温和梳理】*（五科均分：${fiveSubScoresCN}）`,
+          `通过本月四周小测，老师们发现孩子目前的小卡点主要集中在：${bottleneckTextCN}，做题时容易因此流失分数。📚`,
+          ``,
+          `💪 *【科任老师 × 安亲督导协同补强计划】*`,
+          `请妈咪/爹地完全放心把孩子交给我们！各科老师已与安亲督导排好下月方案：每天在安亲班抽出 *15分钟进行高频错题复盘、关键字圈读训练与听写温习*，手把手陪 *${cnName}* 稳步赶上！📅❤️`
+        ].join("\n");
+
+        enBody = [
+          `【📱 WhatsApp English Version】`,
+          `👋 Hello *${enName}*'s Mommy/Daddy! 🌸`,
+          `First, please be assured that *${enName}* had steady attendance this month, cooperated well with our daycare supervisors on daily homework, ${strongPraiseEN}! 👏✨`,
+          ``,
+          `💡 *【Holistic Observation & Gentle Bottleneck Review】* (${fiveSubScoresEN})`,
+          `From this month's weekly quizzes, our teachers noticed small bottlenecks in: ${bottleneckTextEN}, which led to some avoidable point deductions. 📚`,
+          ``,
+          `💪 *【Subject Teachers × Daycare Collaborative Action Plan】*`,
+          `Please rest assured leaving *${enName}* in our care! Our subject teachers and daycare team have scheduled *15 mins of daily targeted error review, keyword-circling practice & dictation drills* during daycare hours to help *${enName}* build a rock-solid foundation! 📅❤️`
+        ].join("\n");
+      }
+
+      return {
+        cnBody, enBody,
+        combined: `${cnBody}\n\n────────────────────\n\n${enBody}`,
+        needsInteractiveGuidance, guidancePrompt, isYellowOrRed
+      };
+    }
+
+    function copyStudentWaReport(studentId, scope, lang) {
+      const g = getActiveGradeObj();
+      const stu = g.students.find(s => s.id === studentId);
+      if (!stu) return;
+      const rep = generateBilingualParentReport(stu, currentMonth, scope);
+      const textToCopy = lang === "CN" ? rep.cnBody : lang === "EN" ? rep.enBody : rep.combined;
+      const label = lang === "CN" ? "中文版" : lang === "EN" ? "English Version" : "中英双语对照版";
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        showToast(`已复制 ${stu.cnName || stu.name} 的【${label}】WhatsApp 汇报文案！`);
+      });
+    }
+
+    function quickFillMissingBottleneck(studentId, scope) {
+      const g = getActiveGradeObj();
+      const stu = g.students.find(s => s.id === studentId);
+      if (!stu) return;
+      const targetSub = scope === "ALL" ? "华语" : scope;
+      const rec = getStudentRecord(targetSub, currentMonth, studentId);
+
+      const inputBottle = prompt(
+        `请问这位学生（${stu.cnName || stu.name}）本月的科目【${targetSub}】、分数或具体卡在哪个知识点？我来为您生成文案：`,
+        rec.c1 || "A. 词汇/听写没背熟"
+      );
+      if (inputBottle === null) return;
+      if (inputBottle.trim()) rec.c1 = inputBottle.trim();
+
+      if (!rec.w1 && !rec.w2 && !rec.w3 && !rec.w4) {
+        const scorePrompt = prompt(`请补充 ${stu.cnName || stu.name} 本月【${targetSub}】的 Week 1 - Week 4 分数（用逗号分隔，例如 4,5,5,6）：`, "4,5,5,6");
+        if (scorePrompt) {
+          const parts = scorePrompt.split(/[,，\s]+/);
+          rec.w1 = parts[0] || "5";
+          rec.w2 = parts[1] || "5";
+          rec.w3 = parts[2] || "6";
+          rec.w4 = parts[3] || "6";
+        }
+      }
+
+      saveDB();
+      renderDashboard();
+      if (activeDrawerStudentId === studentId) openStudentDrawer(studentId);
+      if (activeHolisticStudentId === studentId) openHolisticModal(studentId);
+      if (!document.getElementById("batchWhatsAppModalBackdrop").classList.contains("hidden")) {
+        renderBatchWhatsAppCards();
+      }
+      showToast(`已补充 ${stu.cnName} 的知识点卡点并生成双语文案！`);
+    }
+
+    // =========================================================================
+    // 6. 全班【中英双语 WhatsApp 汇报批量生成中心】逻辑
+    // =========================================================================
+    function openBatchWhatsAppModal() {
+      const g = getActiveGradeObj();
+      document.getElementById("batchWaModalTitle").textContent = `${g.label} · 全班 ${g.students.length} 人【中英双语对照】WhatsApp 家长汇报中心`;
+      const scopeSelect = document.getElementById("batchWaScopeSelect");
+      scopeSelect.value = currentSubject;
+      renderBatchWhatsAppCards();
+      const modal = document.getElementById("batchWhatsAppModalBackdrop");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      safeCreateIcons();
+    }
+
+    function closeBatchWhatsAppModal() {
+      const modal = document.getElementById("batchWhatsAppModalBackdrop");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    function renderBatchWhatsAppCards() {
+      const g = getActiveGradeObj();
+      const scope = document.getElementById("batchWaScopeSelect").value;
+      const container = document.getElementById("batchWhatsAppCardsContainer");
+
+      container.innerHTML = g.students.map((stu, idx) => {
+        const rep = generateBilingualParentReport(stu, currentMonth, scope);
+        const badgeHTML = rep.isYellowOrRed
+          ? `<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">🟡/🔴 已启用「三明治法则」温和关怀与补强计划</span>`
+          : `<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">🌟/🟢 肯定优势课题与下一阶段进阶目标</span>`;
+
+        const guidanceAlertHTML = rep.needsInteractiveGuidance ? `
+          <div class="mb-3 bg-rose-50 border border-rose-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
+            <span class="text-xs text-rose-800 font-semibold">❓ ${rep.guidancePrompt}</span>
+            <button type="button" onclick="quickFillMissingBottleneck('${stu.id}', '${scope}')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-600 text-white hover:bg-rose-700 transition cursor-pointer">
+              + 立即补充知识点卡点与分数
+            </button>
+          </div>
+        ` : "";
+
+        return `
+          <div class="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+            <div class="px-5 py-3.5 bg-slate-100/80 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <span class="w-7 h-7 rounded-lg bg-slate-900 text-white text-xs font-extrabold flex items-center justify-center">#${stu.no || idx + 1}</span>
+                <div>
+                  <span class="font-extrabold text-slate-900 text-sm">${stu.cnName || ''} (${stu.name}) ${stu.cls ? '· ' + stu.cls : ''}</span>
+                  <span class="ml-2">${badgeHTML}</span>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2">
+                <button type="button" onclick="copyStudentWaReport('${stu.id}', '${scope}', 'CN')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition cursor-pointer">仅复制中文版</button>
+                <button type="button" onclick="copyStudentWaReport('${stu.id}', '${scope}', 'EN')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition cursor-pointer">Copy English Only</button>
+                <button type="button" onclick="copyStudentWaReport('${stu.id}', '${scope}', 'BOTH')" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-emerald-600 text-white hover:bg-emerald-700 transition cursor-pointer shadow-xs">📋 一键复制中英双语合集</button>
+              </div>
+            </div>
+
+            <div class="p-4">
+              ${guidanceAlertHTML}
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div class="bg-emerald-50/40 border border-emerald-200/80 rounded-xl p-3.5">
+                  <pre class="text-xs text-slate-800 whitespace-pre-wrap font-sans leading-relaxed">${rep.cnBody}</pre>
+                </div>
+                <div class="bg-indigo-50/40 border border-indigo-200/80 rounded-xl p-3.5">
+                  <pre class="text-xs text-slate-800 whitespace-pre-wrap font-sans leading-relaxed">${rep.enBody}</pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function copyAllWhatsAppMessages() {
+      const g = getActiveGradeObj();
+      const scope = document.getElementById("batchWaScopeSelect").value;
+      const allTexts = g.students.map(stu => {
+        const rep = generateBilingualParentReport(stu, currentMonth, scope);
+        return `========================================\n👦 #${stu.no} ${stu.cnName} (${stu.name})\n========================================\n${rep.combined}`;
+      }).join("\n\n\n");
+
+      navigator.clipboard.writeText(allTexts).then(() => {
+        showToast(`已一键复制 ${g.label} 全班 ${g.students.length} 人【中英双语 WhatsApp 汇报】合集！`);
+      });
+    }
+
+    // =========================================================================
+    // 7. 全班五科报告单「批量 A4 打印预览中心」逻辑
+    // =========================================================================
+    function openBatchPrintModal(onlyStudentId = null) {
+      const g = getActiveGradeObj();
+      if (onlyStudentId) {
+        selectedPrintStudentIds = new Set([onlyStudentId]);
+      } else if (selectedPrintStudentIds.size <= 1) {
+        selectedPrintStudentIds = new Set(g.students.map(s => s.id));
+      }
+
+      renderBatchStudentCheckboxes();
+      renderBatchPrintPages();
+
+      const modal = document.getElementById("batchPrintModalBackdrop");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      safeCreateIcons();
+    }
+
+    function closeBatchPrintModal() {
+      const modal = document.getElementById("batchPrintModalBackdrop");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    function toggleStudentFilterPanel() {
+      document.getElementById("batchFilterPanel").classList.toggle("hidden");
+    }
+
+    function renderBatchStudentCheckboxes() {
+      const g = getActiveGradeObj();
+      const container = document.getElementById("batchStudentCheckboxes");
+      container.innerHTML = g.students.map(stu => {
+        const checked = selectedPrintStudentIds.has(stu.id);
+        return `
+          <label class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs cursor-pointer border transition ${
+            checked ? 'bg-indigo-950/80 border-indigo-500/60 text-white font-semibold' : 'bg-slate-800/60 border-slate-700 text-slate-400'
+          }">
+            <input type="checkbox" ${checked ? 'checked' : ''} onchange="togglePrintStudentSelection('${stu.id}', this.checked)" class="rounded text-indigo-500" />
+            <span class="truncate">#${stu.no} ${stu.cnName || stu.name}</span>
+          </label>
+        `;
+      }).join("");
+    }
+
+    function togglePrintStudentSelection(stuId, isChecked) {
+      if (isChecked) selectedPrintStudentIds.add(stuId);
+      else selectedPrintStudentIds.delete(stuId);
+      renderBatchStudentCheckboxes();
+      renderBatchPrintPages();
+    }
+
+    function selectAllPrintStudents(selectAll) {
+      const g = getActiveGradeObj();
+      if (selectAll) selectedPrintStudentIds = new Set(g.students.map(s => s.id));
+      else selectedPrintStudentIds.clear();
+      renderBatchStudentCheckboxes();
+      renderBatchPrintPages();
+    }
+
+    function renderBatchPrintPages() {
+      const g = getActiveGradeObj();
+      const showSignSlip = document.getElementById("toggleSignSlip").checked;
+      const remarkMode = document.getElementById("printRemarkModeSelect").value;
+      const customNote = document.getElementById("batchCenterNoteInput").value.trim();
+
+      const targetStudents = g.students.filter(s => selectedPrintStudentIds.has(s.id));
+      document.getElementById("batchPrintSummaryBadge").textContent =
+        `已选 ${targetStudents.length} / ${g.students.length} 人 (共 ${targetStudents.length} 页 A4)`;
+
+      const listContainer = document.getElementById("batchPrintPagesList");
+      if (targetStudents.length === 0) {
+        listContainer.innerHTML = `<div class="bg-slate-800 text-slate-300 rounded-2xl p-12 text-center border border-slate-700">请先在上方「勾选打印名单」中至少选择 1 名学生</div>`;
+        return;
+      }
+
+      const todayStr = new Date().toISOString().slice(0, 10);
+
+      listContainer.innerHTML = targetStudents.map((stu, pageIdx) => {
+        const summary = getStudentAllSubjectsSummary(stu.id, currentMonth);
+        const bilingualRep = generateBilingualParentReport(stu, currentMonth, "ALL");
+
+        const subjectRowsHTML = summary.subjectDetails.map(d => {
+          const stMeta = getStatusMeta(d.rec.status);
+          const diagList = d.comments.length > 0
+            ? d.comments.map(c => `<div class="text-[11px] font-semibold text-slate-800">• ${c}</div>`).join("")
+            : `<div class="text-[11px] text-slate-500">• 课堂知识点掌握稳健，无明显薄弱项</div>`;
+
+          const teacherRemark = d.rec.others
+            ? `<div class="text-[11px] text-indigo-900 bg-indigo-50/70 px-2 py-0.5 rounded border border-indigo-100 mt-1 font-medium">💬 老师寄语：${d.rec.others}</div>`
+            : "";
+
+          return `
+            <tr class="border-b border-slate-200">
+              <td class="py-2 px-3 font-bold text-slate-900 w-28">
+                <div class="flex items-center gap-2">
+                  <span class="w-5 h-5 rounded bg-gradient-to-br ${d.sub.color} text-white flex items-center justify-center text-[10px] font-extrabold">${d.sub.shortIcon}</span>
+                  <div>
+                    <div class="text-xs font-extrabold">${d.sub.key} (${d.sub.code})</div>
+                    <div class="text-[10px] text-slate-500 font-normal">${d.rec.teacher || d.sub.defaultTeacher}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="py-2 px-2 text-center w-20">
+                <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold border ${stMeta.pillClass}">${stMeta.short}</span>
+              </td>
+              <td class="py-2 px-1 text-center font-semibold text-xs text-slate-700 w-10 bg-slate-50/70">${d.rec.w1 || '-'}</td>
+              <td class="py-2 px-1 text-center font-semibold text-xs text-slate-700 w-10 bg-slate-50/70">${d.rec.w2 || '-'}</td>
+              <td class="py-2 px-1 text-center font-semibold text-xs text-slate-700 w-10 bg-slate-50/70">${d.rec.w3 || '-'}</td>
+              <td class="py-2 px-1 text-center font-semibold text-xs text-slate-700 w-10 bg-slate-50/70 border-r border-slate-200">${d.rec.w4 || '-'}</td>
+              <td class="py-2 px-2 text-center w-20 border-r border-slate-200">
+                <span class="text-xs font-extrabold text-slate-900">${d.avgStr !== null ? d.avgStr : '—'}</span>
+                <span class="block text-[9px] ${d.trend.cls}">${d.trend.icon}</span>
+              </td>
+              <td class="py-2 px-2.5">${diagList}${teacherRemark}</td>
+            </tr>
+          `;
+        }).join("");
+
+        const centerRemarkBlockHTML = remarkMode === "SMART_BILINGUAL" ? `
+          <div class="bg-emerald-50/60 p-3 rounded-xl border border-emerald-200 space-y-1.5 text-[10.5px] leading-relaxed">
+            <div class="flex items-center justify-between">
+              <span class="font-extrabold text-emerald-900">📌 中心月度双语寄语 &amp; 协同补强计划 (Monthly Bilingual Holistic Remark)</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-white text-emerald-700 border border-emerald-200">${bilingualRep.isYellowOrRed ? '三明治温和关怀' : '优势肯定与进阶'}</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 pt-1">
+              <div class="bg-white/95 p-2.5 rounded-lg border border-emerald-100 text-slate-800 whitespace-pre-wrap font-sans">${bilingualRep.cnBody}</div>
+              <div class="bg-white/95 p-2.5 rounded-lg border border-indigo-100 text-slate-800 whitespace-pre-wrap font-sans">${bilingualRep.enBody}</div>
+            </div>
+          </div>
+        ` : `
+          <div class="bg-slate-50 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-700 flex items-start gap-2">
+            <span class="font-extrabold text-brand-700 whitespace-nowrap">📌 中心月度寄语：</span>
+            <span>${customNote || '感谢家长的配合，让我们携手陪伴孩子稳步成长！'}</span>
+          </div>
+        `;
+
+        const signSlipHTML = showSignSlip ? `
+          <div class="mt-2 pt-2.5 border-t-2 border-dashed border-slate-300 space-y-2.5">
+            ${centerRemarkBlockHTML}
+            <div class="grid grid-cols-3 gap-4 pt-1 text-xs text-slate-600">
+              <div class="border-b border-slate-300 pb-4">
+                <span class="font-bold text-slate-700">中心负责老师签字：</span>
+                <span class="ml-2 text-slate-800 font-semibold">Teacher Tan</span>
+              </div>
+              <div class="border-b border-slate-300 pb-4">
+                <span class="font-bold text-slate-700">家长查阅签名 (Parent's Signature)：</span>
+              </div>
+              <div class="border-b border-slate-300 pb-4">
+                <span class="font-bold text-slate-700">签阅日期 (Date)：</span>
+              </div>
+            </div>
+          </div>
+        ` : "";
+
+        return `
+          <div class="a4-report-page bg-white rounded-2xl shadow-xl border border-slate-200 p-5 sm:p-7 text-slate-900 space-y-3">
+            <div class="flex items-start justify-between border-b-2 border-slate-900 pb-3">
+              <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl bg-slate-900 text-white flex items-center justify-center font-extrabold text-sm">LK</div>
+                <div>
+                  <h3 class="text-base font-extrabold tracking-tight text-slate-900">LK EDU TAMAN CONNAUGHT · 学生月度五科学习评估报告单</h3>
+                  <p class="text-[11px] text-slate-500 font-medium">2027 Academic Progress &amp; Bilingual Diagnostic Report · ${g.label}</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-indigo-50 text-indigo-800 border border-indigo-200">
+                  评估月份：2027年 ${currentMonth}
+                </span>
+                <p class="text-[10px] text-slate-400 mt-0.5">日期：${todayStr} · 第 ${pageIdx + 1} / ${targetStudents.length} 份</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-12 gap-3 bg-slate-50/90 p-3 rounded-xl border border-slate-200">
+              <div class="col-span-5 flex items-center gap-2.5 border-r border-slate-200 pr-2">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-extrabold text-sm">
+                  ${stu.cnName ? stu.cnName[0] : stu.name[0]}
+                </div>
+                <div>
+                  <div class="text-[10px] text-slate-400 font-bold">学生姓名 · 学号 #${stu.no} ${stu.cls ? '(' + stu.cls + '班)' : ''}</div>
+                  <div class="text-sm font-extrabold text-slate-900">${stu.name} (${stu.cnName || '—'})</div>
+                </div>
+              </div>
+
+              <div class="col-span-3 flex flex-col justify-center items-center border-r border-slate-200 px-2">
+                <span class="text-[10px] text-slate-400 font-bold">五科周测总均分</span>
+                <div class="flex items-baseline gap-1">
+                  <span class="text-xl font-extrabold text-slate-900">${summary.overallAvg !== null ? summary.overallAvg : '—'}</span>
+                  <span class="text-[11px] text-slate-500 font-semibold">/ 10分</span>
+                </div>
+              </div>
+
+              <div class="col-span-4 flex flex-col justify-center pl-2 space-y-0.5 text-[11px]">
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-500 font-semibold">🌟 优势学科：</span>
+                  <strong class="text-emerald-700 font-extrabold">${summary.bestSub ? summary.bestSub.sub.key + ' (' + summary.bestSub.avgStr + '分)' : '—'}</strong>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-500 font-semibold">🎯 重点关注：</span>
+                  <strong class="text-rose-600 font-extrabold">${summary.weakSub ? summary.weakSub.sub.key + ' (' + summary.weakSub.avgStr + '分)' : '—'}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="border border-slate-200 rounded-xl overflow-hidden">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-900 text-white text-[10px] font-bold uppercase tracking-wider">
+                    <th class="py-2 px-3">学科与科任老师</th>
+                    <th class="py-2 px-2 text-center">状态</th>
+                    <th class="py-2 px-1 text-center">W1</th>
+                    <th class="py-2 px-1 text-center">W2</th>
+                    <th class="py-2 px-1 text-center">W3</th>
+                    <th class="py-2 px-1 text-center border-r border-slate-700">W4</th>
+                    <th class="py-2 px-2 text-center border-r border-slate-700">均分</th>
+                    <th class="py-2 px-2.5">学科诊断指标与科任老师反馈</th>
+                  </tr>
+                </thead>
+                <tbody>${subjectRowsHTML}</tbody>
+              </table>
+            </div>
+
+            ${signSlipHTML}
+          </div>
+        `;
+      }).join("");
+    }
+
+    function triggerBatchPrint() { window.print(); }
+
+    function printSingleStudentFromHolistic() {
+      const stuId = activeHolisticStudentId;
+      closeHolisticModal();
+      if (stuId) {
+        openBatchPrintModal(stuId);
+        setTimeout(() => window.print(), 250);
+      }
+    }
+
+    // =========================================================================
+    // 8. 顶部导航与 KPI 渲染
+    // =========================================================================
+    function renderSubjectTabs() {
+      const g = getActiveGradeObj();
+      const container = document.getElementById("subjectTabsContainer");
+      const isAll = currentSubject === "ALL";
+      document.getElementById("headerBatchCount").textContent = g.students.length;
+      document.getElementById("headerWaCount").textContent = g.students.length;
+
+      const allTabHTML = `
+        <button type="button" onclick="selectSubject('ALL')"
+          class="px-4 py-2.5 rounded-xl text-sm font-extrabold transition flex items-center gap-2.5 cursor-pointer ${
+            isAll
+              ? 'bg-gradient-to-r from-slate-900 via-indigo-900 to-slate-900 text-white shadow-md scale-[1.02] ring-2 ring-indigo-500/30'
+              : 'bg-indigo-50/90 text-indigo-900 hover:bg-indigo-100 border border-indigo-200'
+          }">
+          <span class="w-6 h-6 rounded-lg ${isAll ? 'bg-indigo-500 text-white' : 'bg-white text-indigo-700 shadow-xs'} flex items-center justify-center text-xs font-extrabold">总</span>
+          <span>📊 五科总览 (All Subjects)</span>
+        </button>
+      `;
+
+      const subjectButtonsHTML = SUBJECTS.map(sub => {
+        const active = sub.key === currentSubject;
+        return `
+          <button type="button" onclick="selectSubject('${sub.key}')"
+            class="px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2.5 cursor-pointer ${
+              active
+                ? `bg-gradient-to-r ${sub.color} text-white shadow-md scale-[1.02]`
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200/80 border border-slate-200/60'
+            }">
+            <span class="w-6 h-6 rounded-lg ${active ? 'bg-white/20 text-white' : 'bg-white text-slate-700 shadow-xs'} flex items-center justify-center text-xs font-extrabold">${sub.shortIcon}</span>
+            <span>${sub.label}</span>
+          </button>
+        `;
+      }).join("");
+
+      container.innerHTML = allTabHTML + `<div class="h-6 w-[1px] bg-slate-200 mx-0.5 hidden sm:block"></div>` + subjectButtonsHTML;
+
+      const heroIcon = document.getElementById("subjectHeroIcon");
+      const headerBadge = document.getElementById("headerSubjectBadge");
+      const teacherSetterBox = document.getElementById("teacherSetterBox");
+      const smartTools = document.getElementById("singleSubjectSmartTools");
+
+      if (isAll) {
+        heroIcon.className = "w-11 h-11 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-700 flex items-center justify-center text-white shadow-md font-extrabold text-base";
+        heroIcon.textContent = "总";
+        headerBadge.className = "px-2.5 py-0.5 text-xs font-bold rounded-full border bg-indigo-50 text-indigo-700 border-indigo-200";
+        headerBadge.textContent = "视图：五科总览";
+        teacherSetterBox.classList.add("hidden");
+        smartTools.classList.add("hidden");
+      } else {
+        const activeSub = SUBJECTS.find(s => s.key === currentSubject) || SUBJECTS[0];
+        heroIcon.className = `w-11 h-11 rounded-2xl bg-gradient-to-br ${activeSub.color} flex items-center justify-center text-white shadow-md font-extrabold text-base`;
+        heroIcon.textContent = activeSub.shortIcon;
+        headerBadge.className = `px-2.5 py-0.5 text-xs font-bold rounded-full border ${activeSub.badgeCls}`;
+        headerBadge.textContent = `科目：${activeSub.label}`;
+        teacherSetterBox.classList.remove("hidden");
+        smartTools.classList.remove("hidden");
+      }
+    }
+
+    function renderMonthTabs() {
+      const container = document.getElementById("monthTabs");
+      container.innerHTML = MONTHS.map(m => {
+        const active = m === currentMonth;
+        return `
+          <button type="button" onclick="selectMonth('${m}')" class="px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+            active ? 'bg-white text-brand-600 shadow-sm border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
+          }">
+            ${m}
+          </button>
+        `;
+      }).join("");
+    }
+
+    function populateQuickStudentJump() {
+      const g = getActiveGradeObj();
+      const select = document.getElementById("quickStudentJump");
+      select.innerHTML = `<option value="">选择学生查看五科与双语汇报...</option>` + g.students.map(s =>
+        `<option value="${s.id}">#${s.no} ${s.cnName} (${s.name})</option>`
+      ).join("");
+    }
+
+    function selectSubject(subKey) {
+      currentSubject = subKey;
+      const g = getActiveGradeObj();
+      if (subKey !== "ALL" && g.students[0]) {
+        const rec = getStudentRecord(currentSubject, currentMonth, g.students[0].id);
+        document.getElementById("globalTeacherInput").value = rec.teacher || "Teacher Tan";
+      }
+      renderDashboard();
+    }
+
+    function selectMonth(m) {
+      currentMonth = m;
+      renderDashboard();
+    }
+
+    function renderKPIs() {
+      const g = getActiveGradeObj();
+      const kpiRow = document.getElementById("kpiRow");
+
+      if (currentSubject === "ALL") {
+        let allSum = 0, allCount = 0, allPassStudents = 0;
+        let alertStudents = [];
+        const subSums = {};
+        SUBJECTS.forEach(s => { subSums[s.key] = { sum: 0, count: 0 }; });
+
+        g.students.forEach(stu => {
+          const summary = getStudentAllSubjectsSummary(stu.id, currentMonth);
+          if (summary.overallAvg !== null) {
+            allSum += parseFloat(summary.overallAvg);
+            allCount++;
+          }
+          if (summary.overallStatus === "Poor" || summary.overallStatus === "Fair") {
+            alertStudents.push(stu.cnName || stu.name.split(" ")[0]);
+          } else {
+            allPassStudents++;
+          }
+          summary.subjectDetails.forEach(d => {
+            if (d.avgNum !== null) {
+              subSums[d.sub.key].sum += d.avgNum;
+              subSums[d.sub.key].count++;
+            }
+          });
+        });
+
+        const classOverallAvg = allCount > 0 ? (allSum / allCount).toFixed(1) : "—";
+        const subAvgList = SUBJECTS.map(s => ({
+          label: s.key,
+          avg: subSums[s.key].count > 0 ? (subSums[s.key].sum / subSums[s.key].count).toFixed(1) : "—"
+        }));
+
+        kpiRow.innerHTML = `
+          <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">${g.label} · 五科总览</p>
+              <div class="flex items-baseline gap-2 mt-1">
+                <h3 class="text-2xl font-extrabold text-slate-900">${g.students.length} 名学生</h3>
+                <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">双向同步就绪</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">华语 · 国语 · 英语 · 数学 · 科学 (${currentMonth})</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-extrabold text-lg">📊</div>
+          </div>
+
+          <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">全班五科综合均分</p>
+              <div class="flex items-baseline gap-2 mt-1">
+                <h3 class="text-2xl font-extrabold text-slate-900">${classOverallAvg}</h3>
+                <span class="text-xs font-medium text-slate-400">/ 10 分</span>
+              </div>
+              <p class="text-xs text-emerald-600 font-medium mt-1">各科均分：${subAvgList.map(x => `${x.label}${x.avg}`).join(" · ")}</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center font-extrabold text-lg">📈</div>
+          </div>
+
+          <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">🌟/🟢 肯定进阶组人数</p>
+              <div class="flex items-baseline gap-2 mt-1">
+                <h3 class="text-2xl font-extrabold text-emerald-600">${allPassStudents} 人</h3>
+                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">${Math.round((allPassStudents / g.students.length) * 100)}%</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">自动生成「肯定优势+进阶目标」双语文案</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-extrabold text-lg">🌟</div>
+          </div>
+
+          <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">🟡/🔴 三明治温和补强组</p>
+              <div class="flex items-baseline gap-2 mt-1">
+                <h3 class="text-2xl font-extrabold text-amber-600">${alertStudents.length} 人</h3>
+                <span class="text-xs font-medium text-rose-500">启用三明治法则文案</span>
+              </div>
+              <p class="text-xs text-slate-500 truncate max-w-[210px] mt-1">${alertStudents.length > 0 ? alertStudents.join("、") : "全班五科均达标"}</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-extrabold text-lg">🥪</div>
+          </div>
+        `;
+      } else {
+        let totalScoreSum = 0, totalScoreEntries = 0, excCount = 0, goodCount = 0, impCount = 0;
+        let alertStudents = [];
+        let sampleTeacher = "Teacher Tan";
+
+        g.students.forEach((stu, i) => {
+          const rec = getStudentRecord(currentSubject, currentMonth, stu.id);
+          if (i === 0 && rec.teacher) sampleTeacher = rec.teacher;
+
+          if (rec.status === "Excellent") excCount++;
+          else if (rec.status === "Good") goodCount++;
+          else if (rec.status === "Improving") impCount++;
+
+          const avg = calcAverage(rec);
+          const trend = calcTrend(rec);
+          if (rec.status === "Poor" || rec.status === "Fair" || (avg !== null && parseFloat(avg) < 5) || trend.diff <= -3) {
+            alertStudents.push(stu.cnName || stu.name.split(" ")[0]);
+          }
+
+          [rec.w1, rec.w2, rec.w3, rec.w4].forEach(w => {
+            const n = parseFloat(w);
+            if (!isNaN(n)) {
+              totalScoreSum += n;
+              totalScoreEntries++;
+            }
+          });
+        });
+
+        const activeSub = SUBJECTS.find(s => s.key === currentSubject) || SUBJECTS[0];
+        const positiveTotal = excCount + goodCount + impCount;
+        const positiveRate = g.students.length > 0 ? Math.round((positiveTotal / g.students.length) * 100) : 0;
+
+        kpiRow.innerHTML = `
+          <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">${g.shortLabel} · 当前评估科目</p>
+              <div class="flex items-baseline gap-2 mt-1">
+                <h3 class="text-2xl font-extrabold text-slate-900">${activeSub.label}</h3>
+                <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-brand-50 text-brand-700">${g.students.length} 名学生</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">负责老师：${sampleTeacher} · ${currentMonth}</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center font-extrabold text-lg">📘</div>
+          </div>
+
+          <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Remark Test 科目周测均分</p>
+              <div class="flex items-baseline gap-2 mt-1">
+                <h3 class="text-2xl font-extrabold text-slate-900">${totalScoreEntries > 0 ? (totalScoreSum / totalScoreEntries).toFixed(1) : "—"}</h3>
+                <span class="text-xs font-medium text-slate-400">/ 10 分</span>
+              </div>
+              <p class="text-xs text-emerald-600 font-medium mt-1">已录入 ${totalScoreEntries} / ${g.students.length * 4} 项周测记录</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center font-extrabold text-lg">🎯</div>
+          </div>
+
+          <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">🌟/🟢 稳健与进步人数</p>
+              <div class="flex items-baseline gap-2 mt-1">
+                <h3 class="text-2xl font-extrabold text-emerald-600">${positiveTotal} 人</h3>
+                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">${positiveRate}%</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">Exc ${excCount} · Good ${goodCount} · Imp ${impCount}</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-extrabold text-lg">🌟</div>
+          </div>
+
+          <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">🟡/🔴 三明治关怀补强组</p>
+              <div class="flex items-baseline gap-2 mt-1">
+                <h3 class="text-2xl font-extrabold text-amber-600">${alertStudents.length} 人</h3>
+                <span class="text-xs font-medium text-rose-500">自动生成三明治双语文案</span>
+              </div>
+              <p class="text-xs text-slate-500 truncate max-w-[210px] mt-1">${alertStudents.length > 0 ? alertStudents.join("、") : "全班表现平稳"}</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-extrabold text-lg">🥪</div>
+          </div>
+        `;
+      }
+    }
+
+    // =========================================================================
+    // 9. 主视图渲染器
+    // =========================================================================
+    function renderDashboard() {
+      updateGradeButtons();
+      updateCloudStatusPill();
+      renderSubjectTabs();
+      renderMonthTabs();
+      populateQuickStudentJump();
+      renderKPIs();
+
+      const allSection = document.getElementById("allSubjectsMatrixSection");
+      const singleSection = document.getElementById("singleSubjectSection");
+      const presetSection = document.getElementById("presetBankSection");
+
+      if (currentSubject === "ALL") {
+        allSection.classList.remove("hidden");
+        singleSection.classList.add("hidden");
+        presetSection.classList.add("hidden");
+        renderAllSubjectsMatrix();
+      } else {
+        allSection.classList.add("hidden");
+        singleSection.classList.remove("hidden");
+        presetSection.classList.remove("hidden");
+        renderPresetBadges();
+        renderSingleSubjectTable();
+      }
+
+      safeCreateIcons();
+    }
+
+    function renderAllSubjectsMatrix() {
+      const g = getActiveGradeObj();
+      document.getElementById("allMatrixHeaderTitle").textContent =
+        `${g.label} · ${currentMonth} 五科综合评估总览表 (华语 / 国语 / 英语 / 数学 / 科学 · 共 ${g.students.length} 人)`;
+
+      const statusFilter = document.getElementById("statusFilter").value;
+      const query = document.getElementById("searchInput").value.trim().toLowerCase();
+
+      const filtered = g.students.filter(stu => {
+        const summary = getStudentAllSubjectsSummary(stu.id, currentMonth);
+        const matchStatus = statusFilter === "ALL" || summary.overallStatus === statusFilter;
+        const matchQuery = !query || stu.name.toLowerCase().includes(query) || (stu.cnName && stu.cnName.includes(query)) || (stu.cls && stu.cls.toLowerCase().includes(query));
+        return matchStatus && matchQuery;
+      });
+
+      const tbody = document.getElementById("allSubjectsTableBody");
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" class="py-12 text-center text-slate-400">没有找到符合筛选条件的学生记录</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map((stu, idx) => {
+        const summary = getStudentAllSubjectsSummary(stu.id, currentMonth);
+        const overallMeta = getStatusMeta(summary.overallStatus);
+        const overallBadgeCls = getAvgBadgeClass(summary.overallAvg);
+
+        const subjectCellsHTML = summary.subjectDetails.map(d => {
+          const stMeta = getStatusMeta(d.rec.status);
+          const avgCls = getAvgBadgeClass(d.avgStr);
+          const topComment = d.comments[0] ? d.comments[0].replace(/^[A-Z]\.\s*/, "") : (d.rec.others || "表现稳健");
+          return `
+            <td class="py-3.5 px-3 border-r border-slate-100 cursor-pointer hover:bg-indigo-50/40 transition" onclick="openHolisticModal('${stu.id}')">
+              <div class="flex items-center justify-between gap-1.5">
+                <span class="px-2 py-0.5 rounded-md text-xs font-extrabold ${avgCls}">${d.avgStr !== null ? d.avgStr + '分' : '—'}</span>
+                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold border ${stMeta.pillClass}">${stMeta.short}</span>
+              </div>
+              <div class="text-[11px] text-slate-500 truncate max-w-[175px] mt-1.5">${topComment}</div>
+            </td>
+          `;
+        }).join("");
+
+        const allDiagnosticTags = [];
+        summary.subjectDetails.forEach(d => {
+          if (d.comments.length > 0) {
+            allDiagnosticTags.push(`${d.sub.key}: ${d.comments[0].replace(/^[A-Z]\.\s*/, "")}`);
+          } else if (d.rec.others) {
+            allDiagnosticTags.push(`${d.sub.key}: ${d.rec.others}`);
+          }
+        });
+
+        const diagnosticSummaryText = allDiagnosticTags.length > 0
+          ? allDiagnosticTags.slice(0, 2).join(" ｜ ")
+          : "五科随堂周测表现均衡，课堂专注度良好";
+
+        return `
+          <tr class="hover:bg-slate-50/95 transition group">
+            <td class="py-3.5 pl-4 pr-2 text-center font-semibold text-slate-400 text-xs">${stu.no || idx + 1}</td>
+            <td class="py-3.5 px-3">
+              <div onclick="openHolisticModal('${stu.id}')" class="cursor-pointer group-hover:text-brand-600 transition">
+                <div class="font-bold text-slate-900 leading-snug">${stu.name}</div>
+                <div class="text-xs font-semibold text-slate-500 mt-0.5">${stu.cnName || '—'} ${stu.cls ? '<span class="ml-1 px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 text-[10px]">' + stu.cls + '</span>' : ''}</div>
+              </div>
+            </td>
+            <td class="py-3.5 px-3 text-center bg-indigo-50/30 border-x border-slate-100">
+              <div class="flex flex-col items-center gap-1">
+                <span class="px-2.5 py-0.5 rounded-lg text-sm font-extrabold ${overallBadgeCls}">${summary.overallAvg !== null ? summary.overallAvg : '—'}</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${overallMeta.pillClass}">${overallMeta.short}</span>
+              </div>
+            </td>
+            ${subjectCellsHTML}
+            <td class="py-3.5 px-3 text-xs text-slate-600">
+              <div class="line-clamp-2 leading-relaxed">${diagnosticSummaryText}</div>
+            </td>
+            <td class="py-3.5 pl-2 pr-4 text-right">
+              <div class="inline-flex items-center gap-1">
+                <button type="button" onclick="openHolisticModal('${stu.id}')" class="px-2.5 py-1.5 rounded-xl text-xs font-extrabold text-white bg-indigo-600 hover:bg-indigo-700 shadow-xs transition cursor-pointer">
+                  五科+双语
+                </button>
+                <button type="button" onclick="openBatchPrintModal('${stu.id}')" title="单独打印该生A4报告单" class="px-2 py-1.5 rounded-xl text-xs bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 transition cursor-pointer">
+                  🖨️
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderSingleSubjectTable() {
+      const g = getActiveGradeObj();
+      const statusFilter = document.getElementById("statusFilter").value;
+      const query = document.getElementById("searchInput").value.trim().toLowerCase();
+      const presets = getSubjectPresets(currentSubject);
+
+      const activeSub = SUBJECTS.find(s => s.key === currentSubject) || SUBJECTS[0];
+      document.getElementById("tableHeaderTitle").textContent =
+        `${g.label} · 科目：${activeSub.label} · ${currentMonth} 学生评估表 (共 ${g.students.length} 人)`;
+
+      const filtered = g.students.filter(stu => {
+        const rec = getStudentRecord(currentSubject, currentMonth, stu.id);
+        const matchStatus = statusFilter === "ALL" || rec.status === statusFilter;
+        const matchQuery = !query || stu.name.toLowerCase().includes(query) || (stu.cnName && stu.cnName.includes(query)) || (stu.cls && stu.cls.toLowerCase().includes(query));
+        return matchStatus && matchQuery;
+      });
+
+      const tbody = document.getElementById("studentTableBody");
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="14" class="py-12 text-center text-slate-400 text-sm">没有找到符合筛选条件的学生记录</td></tr>`;
+        return;
+      }
+
+      const commentOptionsHTML = (selectedVal) => {
+        const hasCustom = selectedVal && !presets.includes(selectedVal);
+        return (
+          `<option value="">— 选择诊断指标 —</option>` +
+          (hasCustom ? `<option value="${selectedVal}" selected>${selectedVal}</option>` : "") +
+          presets.map(opt => `<option value="${opt}" ${selectedVal === opt ? 'selected' : ''}>${opt}</option>`).join("")
+        );
+      };
+
+      tbody.innerHTML = filtered.map((stu, idx) => {
+        const rec = getStudentRecord(currentSubject, currentMonth, stu.id);
+        const avg = calcAverage(rec);
+        const trend = calcTrend(rec);
+        const avgBadgeClass = getAvgBadgeClass(avg);
+
+        const statusButtonsHTML = STATUS_OPTIONS.map(opt => {
+          const isSelected = rec.status === opt.key;
+          return `
+            <button type="button"
+              onclick="toggleStudentStatus('${stu.id}', '${opt.key}')"
+              title="${opt.label}（点击切换，再次点击清空）"
+              class="px-2 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer select-none ${
+                isSelected ? opt.activeClass : opt.idleClass
+              }">
+              ${opt.short}
+            </button>
+          `;
+        }).join("");
+
+        return `
+          <tr class="hover:bg-slate-50/90 transition group">
+            <td class="py-3.5 pl-4 pr-2 text-center font-semibold text-slate-400 text-xs">${stu.no || idx + 1}</td>
+
+            <td class="py-3.5 px-3">
+              <div onclick="openHolisticModal('${stu.id}')" class="cursor-pointer group-hover:text-brand-600 transition" title="点击打开该生五科一页总览">
+                <div class="font-bold text-slate-900 leading-snug">${stu.name}</div>
+                <div class="text-xs font-semibold text-slate-500 mt-0.5">
+                  ${stu.cnName || '—'}
+                  ${stu.cls ? `<span class="ml-1 px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 text-[10px]">${stu.cls}</span>` : ''}
+                </div>
+              </div>
+            </td>
+
+            <td class="py-3.5 px-3">
+              <div class="inline-flex items-center gap-0.5 rounded-xl bg-slate-100 p-1 border border-slate-200/80">
+                ${statusButtonsHTML}
+              </div>
+            </td>
+
+            <td class="py-3.5 px-1 bg-indigo-50/20 border-l border-slate-100 text-center">
+              <input type="number" min="0" max="10" step="0.5" value="${rec.w1}" placeholder="-"
+                oninput="updateScoreInPlace('${stu.id}', 'w1', this)"
+                class="w-12 h-9 text-center rounded-lg border text-xs transition focus:ring-2 focus:ring-brand-500 focus:outline-none ${getScoreColorClass(rec.w1)}" />
+            </td>
+            <td class="py-3.5 px-1 bg-indigo-50/20 text-center">
+              <input type="number" min="0" max="10" step="0.5" value="${rec.w2}" placeholder="-"
+                oninput="updateScoreInPlace('${stu.id}', 'w2', this)"
+                class="w-12 h-9 text-center rounded-lg border text-xs transition focus:ring-2 focus:ring-brand-500 focus:outline-none ${getScoreColorClass(rec.w2)}" />
+            </td>
+            <td class="py-3.5 px-1 bg-indigo-50/20 text-center">
+              <input type="number" min="0" max="10" step="0.5" value="${rec.w3}" placeholder="-"
+                oninput="updateScoreInPlace('${stu.id}', 'w3', this)"
+                class="w-12 h-9 text-center rounded-lg border text-xs transition focus:ring-2 focus:ring-brand-500 focus:outline-none ${getScoreColorClass(rec.w3)}" />
+            </td>
+            <td class="py-3.5 px-1 bg-indigo-50/20 border-r border-slate-100 text-center">
+              <input type="number" min="0" max="10" step="0.5" value="${rec.w4}" placeholder="-"
+                oninput="updateScoreInPlace('${stu.id}', 'w4', this)"
+                class="w-12 h-9 text-center rounded-lg border text-xs transition focus:ring-2 focus:ring-brand-500 focus:outline-none ${getScoreColorClass(rec.w4)}" />
+            </td>
+
+            <td class="py-3.5 px-2 text-center">
+              <div class="flex flex-col items-center">
+                <span id="avg-${stu.id}" class="inline-block px-2 py-0.5 rounded-lg text-xs font-extrabold ${avgBadgeClass}">
+                  ${avg !== null ? avg : '—'}
+                </span>
+                <span id="trend-${stu.id}" class="text-[10px] mt-0.5 ${trend.cls}">${trend.icon}</span>
+              </div>
+            </td>
+
+            <td class="py-3.5 px-1.5">
+              <select onchange="updateField('${stu.id}', 'c1', this.value)"
+                class="w-full px-2 py-2 rounded-xl text-xs border cursor-pointer ${rec.c1 ? 'border-amber-300 bg-amber-50/60 text-amber-900 font-semibold' : 'border-slate-200 bg-white text-slate-600'} focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                ${commentOptionsHTML(rec.c1)}
+              </select>
+            </td>
+            <td class="py-3.5 px-1.5">
+              <select onchange="updateField('${stu.id}', 'c2', this.value)"
+                class="w-full px-2 py-2 rounded-xl text-xs border cursor-pointer ${rec.c2 ? 'border-amber-300 bg-amber-50/60 text-amber-900 font-semibold' : 'border-slate-200 bg-white text-slate-600'} focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                ${commentOptionsHTML(rec.c2)}
+              </select>
+            </td>
+            <td class="py-3.5 px-1.5">
+              <select onchange="updateField('${stu.id}', 'c3', this.value)"
+                class="w-full px-2 py-2 rounded-xl text-xs border cursor-pointer ${rec.c3 ? 'border-amber-300 bg-amber-50/60 text-amber-900 font-semibold' : 'border-slate-200 bg-white text-slate-600'} focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                ${commentOptionsHTML(rec.c3)}
+              </select>
+            </td>
+
+            <td class="py-3.5 px-2">
+              <input type="text" value="${rec.others || ''}" placeholder="输入个性化评语..."
+                oninput="updateTextInPlace('${stu.id}', 'others', this.value)"
+                class="w-full px-2.5 py-2 rounded-xl text-xs border border-slate-200 bg-slate-50/60 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+            </td>
+
+            <td class="py-3.5 px-2">
+              <input type="text" value="${rec.teacher || 'Teacher Tan'}" placeholder="负责老师"
+                oninput="updateTextInPlace('${stu.id}', 'teacher', this.value)"
+                class="w-full px-2.5 py-2 rounded-xl text-xs font-medium text-slate-700 border border-slate-200 bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none" />
+            </td>
+
+            <td class="py-3.5 pl-2 pr-4 text-right">
+              <div class="inline-flex items-center gap-1">
+                <button type="button" onclick="openHolisticModal('${stu.id}')" title="一页看齐该学生五科成绩与双语评语" class="px-2.5 py-1.5 rounded-xl text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition cursor-pointer">
+                  五科
+                </button>
+                <button type="button" onclick="openStudentDrawer('${stu.id}')" title="编辑当前科目详情与双语WhatsApp" class="px-2.5 py-1.5 rounded-xl text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition cursor-pointer">
+                  双语汇报
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderPresetBadges() {
+      const presets = getSubjectPresets(currentSubject);
+      document.getElementById("presetBankTitle").textContent =
+        `🏷️ ${currentSubject}科专属预设评语指标库（共 ${presets.length} 项标准诊断，适配一/二年级且内置英文翻译映射）`;
+      const container = document.getElementById("presetBadgesContainer");
+      container.innerHTML = presets.map(p => {
+        const isPraise = p.includes("表扬");
+        return `
+          <span class="px-3 py-1.5 rounded-xl text-xs font-medium border ${
+            isPraise ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-slate-100 text-slate-700 border-slate-200/80'
+          }">
+            ${p}
+          </span>
+        `;
+      }).join("");
+    }
+
+    // =========================================================================
+    // 10. 单人「一页看齐五科」弹窗逻辑 (Holistic 5-Subject Modal)
+    // =========================================================================
+    function openHolisticModal(studentId) {
+      activeHolisticStudentId = studentId;
+      const g = getActiveGradeObj();
+      const stu = g.students.find(s => s.id === studentId);
+      if (!stu) return;
+
+      const summary = getStudentAllSubjectsSummary(studentId, currentMonth);
+      const overallMeta = getStatusMeta(summary.overallStatus);
+      const bilingualRep = generateBilingualParentReport(stu, currentMonth, "ALL");
+
+      document.getElementById("holisticAvatar").textContent = (stu.cnName ? stu.cnName[0] : stu.name[0]);
+      document.getElementById("holisticMonthBadge").textContent = `${g.label} · ${currentMonth} 五科综合评估报告单`;
+      document.getElementById("holisticStudentNo").textContent = `学号 #${stu.no} ${stu.cls ? '· ' + stu.cls + '班' : ''}`;
+      document.getElementById("holisticStudentName").textContent = `${stu.name} (${stu.cnName || ''})`;
+
+      const sel = document.getElementById("holisticStudentSelect");
+      sel.innerHTML = g.students.map(s =>
+        `<option value="${s.id}" ${s.id === studentId ? 'selected' : ''} class="text-slate-900">#${s.no} ${s.cnName} (${s.name})</option>`
+      ).join("");
+
+      document.getElementById("holisticOverallAvg").textContent = summary.overallAvg !== null ? summary.overallAvg : "—";
+      const badgeEl = document.getElementById("holisticOverallBadge");
+      badgeEl.className = `px-3 py-1 rounded-full text-xs font-bold border ${overallMeta.pillClass}`;
+      badgeEl.textContent = overallMeta.label;
+
+      document.getElementById("holisticBestSubject").textContent = summary.bestSub
+        ? `${summary.bestSub.sub.label} (${summary.bestSub.avgStr}分)` : "待录入";
+      document.getElementById("holisticWeakSubject").textContent = summary.weakSub
+        ? `${summary.weakSub.sub.label} (${summary.weakSub.avgStr}分)` : "待录入";
+
+      const barsContainer = document.getElementById("holisticBarsContainer");
+      barsContainer.innerHTML = summary.subjectDetails.map(d => {
+        const pct = d.avgNum !== null ? Math.min(100, Math.round(d.avgNum * 10)) : 0;
+        const stMeta = getStatusMeta(d.rec.status);
+        return `
+          <div class="grid grid-cols-12 items-center gap-3 text-xs">
+            <div class="col-span-3 sm:col-span-2 font-bold text-slate-700 flex items-center gap-1.5">
+              <span class="w-5 h-5 rounded-md bg-gradient-to-br ${d.sub.color} text-white flex items-center justify-center text-[10px] font-extrabold">${d.sub.shortIcon}</span>
+              <span>${d.sub.key}</span>
+            </div>
+            <div class="col-span-6 sm:col-span-7 bg-slate-100 h-3 rounded-full overflow-hidden p-0.5 border border-slate-200/60">
+              <div class="h-full rounded-full ${d.sub.barColor} transition-all duration-500" style="width: ${pct}%"></div>
+            </div>
+            <div class="col-span-3 flex items-center justify-end gap-2">
+              <span class="font-extrabold text-slate-900">${d.avgStr !== null ? d.avgStr + ' / 10' : '未录入'}</span>
+              <span class="px-2 py-0.5 rounded-md text-[10px] font-bold border ${stMeta.pillClass}">${stMeta.short}</span>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      const cardsGrid = document.getElementById("holisticSubjectCardsGrid");
+      cardsGrid.innerHTML = summary.subjectDetails.map(d => {
+        const stMeta = getStatusMeta(d.rec.status);
+        const commentsHTML = d.comments.length > 0
+          ? d.comments.map(c => `<li class="flex items-start gap-1.5 text-xs text-slate-700"><span class="text-amber-500 font-bold">•</span><span>${c}</span></li>`).join("")
+          : `<li class="text-xs text-slate-400 italic">暂无薄弱项诊断指标（课堂掌握良好）</li>`;
+
+        const miniStatusBtns = STATUS_OPTIONS.map(opt => {
+          const active = d.rec.status === opt.key;
+          return `
+            <button type="button" onclick="updateSubjectStatusFromModal('${stu.id}', '${d.sub.key}', '${opt.key}')"
+              class="px-1.5 py-0.5 rounded text-[10px] font-bold transition cursor-pointer ${
+                active ? opt.activeClass : 'bg-white text-slate-500 hover:bg-slate-100 border border-slate-200/70'
+              }">
+              ${opt.short}
+            </button>
+          `;
+        }).join("");
+
+        return `
+          <div class="bg-white rounded-2xl border ${d.sub.borderCls} shadow-xs overflow-hidden flex flex-col justify-between">
+            <div>
+              <div class="px-4 py-3 ${d.sub.lightBg} border-b ${d.sub.borderCls} flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="w-7 h-7 rounded-lg bg-gradient-to-br ${d.sub.color} text-white flex items-center justify-center text-xs font-extrabold shadow-xs">${d.sub.shortIcon}</span>
+                  <div>
+                    <h4 class="text-sm font-extrabold text-slate-900">${d.sub.label}</h4>
+                    <p class="text-[11px] text-slate-500">科任老师：${d.rec.teacher || d.sub.defaultTeacher}</p>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <span class="text-lg font-extrabold text-slate-900">${d.avgStr !== null ? d.avgStr : '—'}<span class="text-xs font-normal text-slate-400">/10</span></span>
+                  <span class="block text-[10px] ${d.trend.cls}">${d.trend.icon}</span>
+                </div>
+              </div>
+
+              <div class="p-4 space-y-3">
+                <div class="flex items-center justify-between gap-1">
+                  <span class="text-[11px] font-bold text-slate-400">状态:</span>
+                  <div class="flex flex-wrap gap-1">${miniStatusBtns}</div>
+                </div>
+
+                <div class="grid grid-cols-4 gap-1.5 text-center bg-slate-50 p-2 rounded-xl border border-slate-200/60">
+                  <div><span class="text-[10px] text-slate-400 block">W1</span><strong class="text-xs font-extrabold text-slate-800">${d.rec.w1 || '-'}</strong></div>
+                  <div><span class="text-[10px] text-slate-400 block">W2</span><strong class="text-xs font-extrabold text-slate-800">${d.rec.w2 || '-'}</strong></div>
+                  <div><span class="text-[10px] text-slate-400 block">W3</span><strong class="text-xs font-extrabold text-slate-800">${d.rec.w3 || '-'}</strong></div>
+                  <div><span class="text-[10px] text-slate-400 block">W4</span><strong class="text-xs font-extrabold text-slate-800">${d.rec.w4 || '-'}</strong></div>
+                </div>
+
+                <div>
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">诊断评语 (Comments 1–3)</span>
+                  <ul class="space-y-1">${commentsHTML}</ul>
+                </div>
+
+                <div class="pt-2 border-t border-slate-100">
+                  <span class="text-[11px] font-bold text-slate-400 block mb-0.5">老师寄语 (Others feedback):</span>
+                  <p class="text-xs text-slate-700 font-medium">${d.rec.others ? d.rec.others : '课堂态度端正，请继续保持！'}</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="px-4 py-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${stMeta.pillClass}">${stMeta.label}</span>
+              <button type="button" onclick="jumpToSubjectStudentEdit('${d.sub.key}', '${stu.id}')" class="text-xs font-bold text-brand-600 hover:text-brand-800 cursor-pointer">
+                ✎ 编辑${d.sub.key}评语
+              </button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      const waSection = document.getElementById("holisticBilingualWaSection");
+      const guidanceBanner = bilingualRep.needsInteractiveGuidance ? `
+        <div class="mx-5 mt-4 bg-rose-50 border border-rose-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
+          <span class="text-xs text-rose-800 font-semibold">❓ ${bilingualRep.guidancePrompt}</span>
+          <button type="button" onclick="quickFillMissingBottleneck('${stu.id}', 'ALL')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-600 text-white hover:bg-rose-700 cursor-pointer">
+            + 立即补充卡点与分数
+          </button>
+        </div>
+      ` : "";
+
+      waSection.innerHTML = `
+        <div class="px-5 py-3.5 bg-emerald-900 text-white flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h4 class="text-sm font-extrabold">💬 中心月度寄语 · 【中英双语对照】WhatsApp 家长汇报文案</h4>
+            <p class="text-[11px] text-emerald-200">${bilingualRep.isYellowOrRed ? '已自动启用「三明治法则」：先夸安亲配合与态度 ➔ 委婉指出卡点 ➔ 科任与安亲督导协同补强计划' : '已自动启用「🌟/🟢 优势肯定与进阶目标」结构'}</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" onclick="copyStudentWaReport('${stu.id}', 'ALL', 'CN')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/15 hover:bg-white/25 text-white cursor-pointer">仅复制中文</button>
+            <button type="button" onclick="copyStudentWaReport('${stu.id}', 'ALL', 'EN')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/15 hover:bg-white/25 text-white cursor-pointer">Copy English</button>
+            <button type="button" onclick="copyStudentWaReport('${stu.id}', 'ALL', 'BOTH')" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold bg-emerald-400 hover:bg-emerald-300 text-slate-950 cursor-pointer shadow-xs">📋 一键复制中英双语合集</button>
+          </div>
+        </div>
+        ${guidanceBanner}
+        <div class="p-5 grid grid-cols-1 lg:grid-cols-2 gap-4 bg-emerald-50/30">
+          <div class="bg-white p-4 rounded-xl border border-emerald-200/80">
+            <pre class="text-xs text-slate-800 whitespace-pre-wrap font-sans leading-relaxed">${bilingualRep.cnBody}</pre>
+          </div>
+          <div class="bg-white p-4 rounded-xl border border-indigo-200/80">
+            <pre class="text-xs text-slate-800 whitespace-pre-wrap font-sans leading-relaxed">${bilingualRep.enBody}</pre>
+          </div>
+        </div>
+      `;
+
+      const modalBackdrop = document.getElementById("holisticModalBackdrop");
+      modalBackdrop.classList.remove("hidden");
+      modalBackdrop.classList.add("flex");
+      safeCreateIcons();
+    }
+
+    function updateSubjectStatusFromModal(studentId, subjectKey, newStatus) {
+      const rec = getStudentRecord(subjectKey, currentMonth, studentId);
+      rec.status = rec.status === newStatus ? "" : newStatus;
+      saveDB();
+      openHolisticModal(studentId);
+      renderDashboard();
+      showToast(`已将 ${subjectKey} 状态更新为：${rec.status || '未评定'}`);
+    }
+
+    function jumpToSubjectStudentEdit(subjectKey, studentId) {
+      closeHolisticModal();
+      currentSubject = subjectKey;
+      renderDashboard();
+      openStudentDrawer(studentId);
+    }
+
+    function navigateHolisticStudent(dir) {
+      const g = getActiveGradeObj();
+      const idx = g.students.findIndex(s => s.id === activeHolisticStudentId);
+      if (idx === -1) return;
+      const nextIdx = (idx + dir + g.students.length) % g.students.length;
+      openHolisticModal(g.students[nextIdx].id);
+    }
+
+    function closeHolisticModal() {
+      const modalBackdrop = document.getElementById("holisticModalBackdrop");
+      modalBackdrop.classList.add("hidden");
+      modalBackdrop.classList.remove("flex");
+      activeHolisticStudentId = null;
+    }
+
+    function switchDrawerToHolistic() {
+      const stuId = activeDrawerStudentId;
+      closeStudentDrawer();
+      if (stuId) openHolisticModal(stuId);
+    }
+
+    // =========================================================================
+    // 11. 单科表格内状态切换、分数实时更新与单科抽屉操作
+    // =========================================================================
+    function toggleStudentStatus(studentId, clickedStatus) {
+      const rec = getStudentRecord(currentSubject, currentMonth, studentId);
+      rec.status = rec.status === clickedStatus ? "" : clickedStatus;
+      saveDB();
+      renderDashboard();
+      showToast(`状态已更新为：${rec.status || '未评定'}`);
+    }
+
+    function autoEvaluateSmartStatus() {
+      if (currentSubject === "ALL") return;
+      const g = getActiveGradeObj();
+      let count = 0;
+      g.students.forEach(stu => {
+        const rec = getStudentRecord(currentSubject, currentMonth, stu.id);
+        const avg = calcAverage(rec);
+        const trend = calcTrend(rec);
+        if (avg !== null) {
+          const num = parseFloat(avg);
+          if (num >= 8.5) rec.status = "Excellent";
+          else if (trend.diff >= 2.5 && num >= 5.0) rec.status = "Improving";
+          else if (trend.diff <= -3) rec.status = "Fair";
+          else if (num >= 6.0) rec.status = "Good";
+          else if (num >= 5.0) rec.status = "Fair";
+          else rec.status = "Poor";
+          count++;
+        }
+      });
+      saveDB();
+      renderDashboard();
+      showToast(`已智能核算 ${currentSubject} 科 ${count} 名学生的 5 级状态！`);
+    }
+
+    function batchSetStatus(targetStatus) {
+      if (currentSubject === "ALL") return;
+      const g = getActiveGradeObj();
+      const realStatus = targetStatus === "CLEAR" ? "" : targetStatus;
+      g.students.forEach(s => {
+        const rec = getStudentRecord(currentSubject, currentMonth, s.id);
+        rec.status = realStatus;
+      });
+      saveDB();
+      renderDashboard();
+      showToast(`已将 ${currentSubject} 全班状态批量设为：${realStatus || '未评定'}`);
+    }
+
+    function applyTeacherToCurrentSubject(teacherName) {
+      if (currentSubject === "ALL") return;
+      const g = getActiveGradeObj();
+      const clean = teacherName.trim() || "Teacher Tan";
+      g.students.forEach(s => {
+        const rec = getStudentRecord(currentSubject, currentMonth, s.id);
+        rec.teacher = clean;
+      });
+      saveDB();
+      renderDashboard();
+      showToast(`已将 ${currentSubject}（${currentMonth}）负责老师统一设为：${clean}`);
+    }
+
+    function updateScoreInPlace(studentId, field, inputEl) {
+      const rec = getStudentRecord(currentSubject, currentMonth, studentId);
+      rec[field] = inputEl.value;
+      saveDB();
+
+      inputEl.className = `w-12 h-9 text-center rounded-lg border text-xs transition focus:ring-2 focus:ring-brand-500 focus:outline-none ${getScoreColorClass(inputEl.value)}`;
+
+      const avg = calcAverage(rec);
+      const trend = calcTrend(rec);
+      const avgEl = document.getElementById(`avg-${studentId}`);
+      if (avgEl) {
+        avgEl.textContent = avg !== null ? avg : "—";
+        avgEl.className = `inline-block px-2 py-0.5 rounded-lg text-xs font-extrabold ${getAvgBadgeClass(avg)}`;
+      }
+      const trendEl = document.getElementById(`trend-${studentId}`);
+      if (trendEl) {
+        trendEl.textContent = trend.icon;
+        trendEl.className = `text-[10px] mt-0.5 ${trend.cls}`;
+      }
+      renderKPIs();
+    }
+
+    function updateTextInPlace(studentId, field, value) {
+      const rec = getStudentRecord(currentSubject, currentMonth, studentId);
+      rec[field] = value;
+      saveDB();
+      if (field === "teacher") renderKPIs();
+    }
+
+    function updateField(studentId, field, value) {
+      const rec = getStudentRecord(currentSubject, currentMonth, studentId);
+      rec[field] = value;
+      saveDB();
+      renderDashboard();
+    }
+
+    function openStudentDrawer(studentId) {
+      const g = getActiveGradeObj();
+      const targetSub = currentSubject === "ALL" ? "华语" : currentSubject;
+      activeDrawerStudentId = studentId;
+      const stu = g.students.find(s => s.id === studentId);
+      if (!stu) return;
+      const rec = getStudentRecord(targetSub, currentMonth, studentId);
+      const presets = getSubjectPresets(targetSub);
+
+      document.getElementById("drawerSubjectBadge").textContent = `科目：${targetSub} · ${currentMonth}`;
+      document.getElementById("drawerTeacherBadge").textContent = rec.teacher || "Teacher Tan";
+      document.getElementById("drawerStudentName").textContent = `${stu.name} (${stu.cnName || ''})`;
+      document.getElementById("drawerStudentNo").textContent = `${g.label} · 学号 #${stu.no} ${stu.cls ? '· ' + stu.cls + '班' : ''}`;
+
+      document.getElementById("drawerStatusBtns").innerHTML = STATUS_OPTIONS.map(st => `
+        <button type="button" onclick="setDrawerStatus('${st.key}')" class="py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer ${
+          rec.status === st.key ? st.activeClass + ' border-transparent' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+        }">
+          ${st.short}
+        </button>
+      `).join("");
+
+      document.getElementById("drawerW1").value = rec.w1;
+      document.getElementById("drawerW2").value = rec.w2;
+      document.getElementById("drawerW3").value = rec.w3;
+      document.getElementById("drawerW4").value = rec.w4;
+
+      const avg = calcAverage(rec);
+      const trend = calcTrend(rec);
+      document.getElementById("drawerAvgBadge").textContent = `月均分：${avg !== null ? avg + ' / 10 (' + trend.icon + ')' : '未录入'}`;
+
+      const buildSelect = (id, val) => {
+        const el = document.getElementById(id);
+        const hasCustom = val && !presets.includes(val);
+        el.innerHTML =
+          `<option value="">— 无 / 未选择 —</option>` +
+          (hasCustom ? `<option value="${val}" selected>${val}</option>` : "") +
+          presets.map(opt => `<option value="${opt}" ${val === opt ? 'selected' : ''}>${opt}</option>`).join("");
+      };
+      buildSelect("drawerC1", rec.c1);
+      buildSelect("drawerC2", rec.c2);
+      buildSelect("drawerC3", rec.c3);
+
+      document.getElementById("drawerOthers").value = rec.others || "";
+      document.getElementById("drawerTeacher").value = rec.teacher || "Teacher Tan";
+
+      document.getElementById("quickFeedbackChips").innerHTML = QUICK_OTHERS_PHRASES.map(phrase => `
+        <button type="button" onclick="appendDrawerPhrase('${phrase}')" class="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-100 hover:bg-brand-50 hover:text-brand-700 text-slate-600 transition border border-slate-200/70 cursor-pointer">
+          + ${phrase}
+        </button>
+      `).join("");
+
+      renderDrawerBilingualPreview(stu, targetSub);
+
+      document.getElementById("studentDrawerBackdrop").classList.remove("hidden");
+      document.getElementById("studentDrawer").classList.remove("translate-x-full");
+      safeCreateIcons();
+    }
+
+    function renderDrawerBilingualPreview(stu, targetSub) {
+      const rep = generateBilingualParentReport(stu, currentMonth, targetSub);
+      const container = document.getElementById("drawerBilingualWaContainer");
+
+      const guidanceHTML = rep.needsInteractiveGuidance ? `
+        <div class="mb-3 bg-rose-50 border border-rose-200 rounded-xl p-3 space-y-2">
+          <div class="text-xs text-rose-800 font-bold">❓ ${rep.guidancePrompt}</div>
+          <button type="button" onclick="quickFillMissingBottleneck('${stu.id}', '${targetSub}')" class="w-full py-1.5 rounded-lg text-xs font-extrabold bg-rose-600 text-white hover:bg-rose-700 transition cursor-pointer">
+            + 立即补充知识点卡点与分数
+          </button>
+        </div>
+      ` : "";
+
+      container.innerHTML = `
+        <div class="bg-emerald-50/70 rounded-2xl p-4 border border-emerald-200 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-xs font-extrabold text-emerald-900">
+              💬 ${targetSub}科 · 中英双语 WhatsApp 汇报 (${rep.isYellowOrRed ? '三明治法则' : '肯定与进阶'})
+            </span>
+            <div class="flex items-center gap-1.5">
+              <button type="button" onclick="copyStudentWaReport('${stu.id}', '${targetSub}', 'CN')" class="px-2 py-1 rounded-lg text-[11px] font-bold bg-white border border-emerald-200 text-emerald-800 hover:bg-emerald-100 cursor-pointer">复制中文</button>
+              <button type="button" onclick="copyStudentWaReport('${stu.id}', '${targetSub}', 'EN')" class="px-2 py-1 rounded-lg text-[11px] font-bold bg-white border border-emerald-200 text-emerald-800 hover:bg-emerald-100 cursor-pointer">Copy EN</button>
+              <button type="button" onclick="copyStudentWaReport('${stu.id}', '${targetSub}', 'BOTH')" class="px-2.5 py-1 rounded-lg text-[11px] font-extrabold bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer">📋 复制双语</button>
+            </div>
+          </div>
+          ${guidanceHTML}
+          <div class="space-y-2.5">
+            <pre class="text-xs text-slate-800 whitespace-pre-wrap font-sans leading-relaxed bg-white/95 p-3 rounded-xl border border-emerald-100">${rep.cnBody}</pre>
+            <pre class="text-xs text-slate-800 whitespace-pre-wrap font-sans leading-relaxed bg-white/95 p-3 rounded-xl border border-indigo-100">${rep.enBody}</pre>
+          </div>
+        </div>
+      `;
+    }
+
+    function setDrawerStatus(statusKey) {
+      if (!activeDrawerStudentId) return;
+      const targetSub = currentSubject === "ALL" ? "华语" : currentSubject;
+      const rec = getStudentRecord(targetSub, currentMonth, activeDrawerStudentId);
+      rec.status = statusKey;
+      saveDB();
+      openStudentDrawer(activeDrawerStudentId);
+      renderDashboard();
+    }
+
+    function appendDrawerPhrase(phrase) {
+      const box = document.getElementById("drawerOthers");
+      box.value = box.value ? `${box.value}；${phrase}` : phrase;
+      updateFromDrawer();
+    }
+
+    function updateFromDrawer() {
+      if (!activeDrawerStudentId) return;
+      const g = getActiveGradeObj();
+      const targetSub = currentSubject === "ALL" ? "华语" : currentSubject;
+      const stu = g.students.find(s => s.id === activeDrawerStudentId);
+      const rec = getStudentRecord(targetSub, currentMonth, activeDrawerStudentId);
+
+      rec.w1 = document.getElementById("drawerW1").value;
+      rec.w2 = document.getElementById("drawerW2").value;
+      rec.w3 = document.getElementById("drawerW3").value;
+      rec.w4 = document.getElementById("drawerW4").value;
+      rec.c1 = document.getElementById("drawerC1").value;
+      rec.c2 = document.getElementById("drawerC2").value;
+      rec.c3 = document.getElementById("drawerC3").value;
+      rec.others = document.getElementById("drawerOthers").value;
+      rec.teacher = document.getElementById("drawerTeacher").value;
+
+      const avg = calcAverage(rec);
+      const trend = calcTrend(rec);
+      document.getElementById("drawerAvgBadge").textContent = `月均分：${avg !== null ? avg + ' / 10 (' + trend.icon + ')' : '未录入'}`;
+      document.getElementById("drawerTeacherBadge").textContent = rec.teacher || "Teacher Tan";
+
+      saveDB();
+      renderDrawerBilingualPreview(stu, targetSub);
+      renderDashboard();
+    }
+
+    function navigateDrawerStudent(direction) {
+      const g = getActiveGradeObj();
+      const idx = g.students.findIndex(s => s.id === activeDrawerStudentId);
+      if (idx === -1) return;
+      const nextIdx = (idx + direction + g.students.length) % g.students.length;
+      openStudentDrawer(g.students[nextIdx].id);
+    }
+
+    function closeStudentDrawer() {
+      document.getElementById("studentDrawerBackdrop").classList.add("hidden");
+      document.getElementById("studentDrawer").classList.add("translate-x-full");
+      activeDrawerStudentId = null;
+    }
+
+    // =========================================================================
+    // 12. 新增评语、新增学生与 CSV 导出
+    // =========================================================================
+    function addCustomCommentPreset() {
+      if (currentSubject === "ALL") return;
+      const val = prompt(`请输入要添加到【${currentSubject}】科目的新评语选项：`);
+      if (val && val.trim()) {
+        const presets = getSubjectPresets(currentSubject);
+        presets.push(val.trim());
+        saveDB();
+        renderDashboard();
+        showToast(`已为 ${currentSubject} 科添加新评语指标！`);
+      }
+    }
+
+    function openAddStudentModal() {
+      document.getElementById("newStuName").value = "";
+      document.getElementById("newStuCnName").value = "";
+      document.getElementById("newStuCls").value = "";
+      document.getElementById("addStudentModal").classList.remove("hidden");
+      document.getElementById("addStudentModal").classList.add("flex");
+    }
+
+    function closeAddStudentModal() {
+      document.getElementById("addStudentModal").classList.add("hidden");
+      document.getElementById("addStudentModal").classList.remove("flex");
+    }
+
+    function confirmAddStudent() {
+      const g = getActiveGradeObj();
+      const name = document.getElementById("newStuName").value.trim();
+      const cnName = document.getElementById("newStuCnName").value.trim();
+      const cls = document.getElementById("newStuCls").value.trim();
+      if (!name) {
+        alert("请输入学生英文全名！");
+        return;
+      }
+      const newId = "stu_" + Date.now();
+      g.students.push({
+        id: newId,
+        no: g.students.length + 1,
+        name,
+        cnName,
+        cls
+      });
+      selectedPrintStudentIds.add(newId);
+      saveDB();
+      closeAddStudentModal();
+      renderDashboard();
+      showToast(`已添加学生至 ${g.shortLabel}：${name} (${cnName})`);
+    }
+
+    function exportCSV() {
+      const g = getActiveGradeObj();
+      let rows = [];
+      let filename = "";
+
+      if (currentSubject === "ALL") {
+        rows.push([
+          "No", "English Name", "中文姓名", "班级", "五科总均分", "综合状态",
+          "华语(BC)均分", "华语状态", "华语评语",
+          "国语(BM)均分", "国语状态", "国语评语",
+          "英语(BI)均分", "英语状态", "英语评语",
+          "数学(MM)均分", "数学状态", "数学评语",
+          "科学(SC)均分", "科学状态", "科学评语",
+          "中英双语WhatsApp汇报文案"
+        ]);
+        g.students.forEach((stu, i) => {
+          const summary = getStudentAllSubjectsSummary(stu.id, currentMonth);
+          const rep = generateBilingualParentReport(stu, currentMonth, "ALL");
+          const row = [i + 1, stu.name, stu.cnName || "", stu.cls || "", summary.overallAvg || "", summary.overallStatus];
+          summary.subjectDetails.forEach(d => {
+            const cJoined = [...d.comments, d.rec.others].filter(Boolean).join(" | ");
+            row.push(d.avgStr || "", d.rec.status || "", cJoined);
+          });
+          row.push(rep.combined);
+          rows.push(row);
+        });
+        filename = `${currentGrade}_五科总览与双语汇报_${currentMonth}.csv`;
+      } else {
+        rows = [
+          ["", "Name:", "", "Status", "Remark Test", "", "", "", "Comment 1", "Comment 2", "Comment 3", "Others feedback", "Teacher In charge", "Bilingual WhatsApp Report"],
+          ["", `科目： ${currentSubject}`, "", "", "Week 1", "Week 2", "Week 3", "Week 4", "", "", "", "", "", ""],
+          ["", currentMonth, "", "", "", "", "", "", "", "", "", "", "", ""]
+        ];
+        g.students.forEach((stu, i) => {
+          const rec = getStudentRecord(currentSubject, currentMonth, stu.id);
+          const rep = generateBilingualParentReport(stu, currentMonth, currentSubject);
+          rows.push([
+            i + 1, stu.name, stu.cnName || "", rec.status || "",
+            rec.w1 || "", rec.w2 || "", rec.w3 || "", rec.w4 || "",
+            rec.c1 || "", rec.c2 || "", rec.c3 || "", rec.others || "", rec.teacher || "",
+            rep.combined
+          ]);
+        });
+        filename = `${currentGrade}_${currentSubject}_${currentMonth}_含双语汇报.csv`;
+      }
+
+      const csvContent = "\uFEFF" + rows.map(r =>
+        r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+      ).join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast(`已导出：${filename}`);
+    }
+
+    function resetToDefaultData() {
+      if (confirm("确定要恢复为初始的一年级(17人)与二年级(16人)数据吗？本地修改将被重置。")) {
+        localStorage.removeItem(STORAGE_KEY);
+        appDB = createInitialMultiGradeDB();
+        saveDB();
+        selectedPrintStudentIds = new Set(getActiveGradeObj().students.map(s => s.id));
+        closeCloudSyncModal();
+        renderDashboard();
+        showToast("已恢复为初始一年级(17人)与二年级(16人)完整数据！");
+      }
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      document.getElementById("toastMsg").textContent = msg;
+      toast.classList.remove("hidden");
+      toast.classList.add("flex");
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add("hidden");
+        toast.classList.remove("flex");
+      }, 2600);
+    }
+
+    function initApp() {
+      try {
+        renderDashboard();
+      } catch (err) {
+        console.error("Init error, auto-healing DB:", err);
+        appDB = createInitialMultiGradeDB();
+        renderDashboard();
+      }
+    }
+
+    initApp();
+    window.addEventListener("load", safeCreateIcons);
+  </script>
+</body>
+</html>
